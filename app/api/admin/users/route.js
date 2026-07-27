@@ -27,9 +27,14 @@ export async function POST(req) {
       typeof body?.username === "string" ? body.username.trim().toLowerCase() : "";
     const password = typeof body?.password === "string" ? body.password : "";
     const role = typeof body?.role === "string" ? body.role : "";
+    const email = typeof body?.email === "string" ? body.email.trim().toLowerCase() : "";
 
     if (!username || !password || !Object.values(ADMIN_ROLES).includes(role)) {
       return Response.json({ error: "Username, password, and role are required." }, { status: 400 });
+    }
+
+    if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      return Response.json({ error: "Invalid email format." }, { status: 400 });
     }
 
     await connectDB();
@@ -39,10 +44,18 @@ export async function POST(req) {
       return Response.json({ error: "Username already exists." }, { status: 409 });
     }
 
+    if (email) {
+      const existingEmail = await AdminUser.findOne({ email });
+      if (existingEmail) {
+        return Response.json({ error: "Email is already in use by another user." }, { status: 400 });
+      }
+    }
+
     const createdUser = await AdminUser.create({
       username,
       passwordHash: hashPassword(password),
       role,
+      email,
       createdBy: user.username,
     });
 
@@ -52,6 +65,7 @@ export async function POST(req) {
           id: createdUser._id.toString(),
           username: createdUser.username,
           role: createdUser.role,
+          email: createdUser.email || "",
           lastLoginAt: createdUser.lastLoginAt,
         },
       },

@@ -21,6 +21,7 @@ export default function AdminDashboardClient({
   contactMsgs,
   visitorCounter,
   recentAlertsList,
+  topBlogs,
 }) {
   const currentDate = new Date();
   const [selectedMonth, setSelectedMonth] = useState(currentDate.getMonth()); // 0-11
@@ -280,8 +281,48 @@ export default function AdminDashboardClient({
           />
         </div>
 
-        {/* Live Alerts Feed Component */}
-        <RecentAlerts initialAlerts={recentAlertsList} />
+        <div className="space-y-6">
+          {/* Live Alerts Feed Component */}
+          <RecentAlerts initialAlerts={recentAlertsList} />
+
+          {/* Top 5 Most Viewed Blogs Widget */}
+          <article className="rounded-[2.5rem] bg-white p-6 shadow-sm ring-1 ring-slate-200">
+            <h2 className="text-2xl font-bold text-slate-950">Top 5 Most Viewed Blogs</h2>
+            <p className="mt-1 text-sm text-slate-500 font-medium">
+              The most popular blog posts by visitor views.
+            </p>
+
+            <div className="mt-6 space-y-4">
+              {topBlogs && topBlogs.length > 0 ? (
+                topBlogs.map((blog, idx) => (
+                  <div
+                    key={blog._id}
+                    className="flex items-start gap-4 rounded-[1.5rem] border border-slate-100 bg-slate-50/50 p-4 transition hover:bg-slate-50"
+                  >
+                    <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-cyan-500/10 text-cyan-600 font-bold text-sm shadow-sm border border-cyan-500/10">
+                      #{idx + 1}
+                    </span>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center justify-between gap-2">
+                        <p className="text-sm font-semibold text-slate-950 truncate" title={blog.title}>
+                          {blog.title}
+                        </p>
+                        <span className="text-xs font-bold text-cyan-600 shrink-0 bg-cyan-50 px-2.5 py-0.5 rounded-full">
+                          {blog.views || 0} views
+                        </span>
+                      </div>
+                      <p className="mt-1.5 text-xs text-slate-500">
+                        Published: {blog.date || (blog.createdAt ? new Date(blog.createdAt).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }) : "N/A")}
+                      </p>
+                    </div>
+                  </div>
+                ))
+              ) : (
+                <p className="text-center py-6 text-sm text-slate-400">No blog views recorded yet.</p>
+              )}
+            </div>
+          </article>
+        </div>
       </section>
 
       {/* 4. Details / Admin Metadata Section */}

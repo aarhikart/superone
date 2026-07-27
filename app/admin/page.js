@@ -36,6 +36,7 @@ export default async function AdminDashboardPage() {
     rawPocReqs,
     rawContactMsgs,
     visitorCounter,
+    rawTopBlogs,
   ] = await Promise.all([
     getJobs(),
     getArticles(),
@@ -45,12 +46,14 @@ export default async function AdminDashboardPage() {
     PocRequest.find({}).sort({ createdAt: -1 }).lean(),
     ContactMessage.find({}).sort({ createdAt: -1 }).lean(),
     WebsiteVisitor.findOne({ key: "landing-page" }).lean(),
+    Post.find({}).sort({ views: -1 }).limit(5).lean(),
   ]);
 
   // Serialize to prevent Server Component serialization errors
   const jobApps = rawJobApps.map(serializeDoc);
   const pocReqs = rawPocReqs.map(serializeDoc);
   const contactMsgs = rawContactMsgs.map(serializeDoc);
+  const topBlogs = rawTopBlogs.map(serializeDoc);
 
   // Build Recent Activity / Live Alerts Feed (top 5 across all collections)
   const recentAlertsList = [
@@ -91,6 +94,7 @@ export default async function AdminDashboardPage() {
       contactMsgs={JSON.parse(JSON.stringify(contactMsgs))}
       visitorCounter={JSON.parse(JSON.stringify(visitorCounter))}
       recentAlertsList={JSON.parse(JSON.stringify(recentAlertsList))}
+      topBlogs={JSON.parse(JSON.stringify(topBlogs))}
     />
   );
 }

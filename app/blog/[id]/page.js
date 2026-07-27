@@ -2,6 +2,7 @@ import Link from "next/link";
 
 import { ContentPageShell } from "@/app/_components/content/content-page-shell";
 import { getPostById, getPosts } from "@/lib/post-service";
+import BlogViewTracker from "./BlogViewTracker";
 
 /* eslint-disable @next/next/no-img-element */
 
@@ -87,6 +88,8 @@ export default async function BlogDetailPage({ params }) {
                 <span>Editorial Note</span>
                 <span className="text-slate-500">/</span>
                 <span className="text-slate-400">{formatDate(post.createdAt || post.date)}</span>
+                <span className="text-slate-500">/</span>
+                <BlogViewTracker postId={id} initialViews={post.views || 0} />
               </div>
 
               <div className="mt-8 h-px w-full bg-white/10" />

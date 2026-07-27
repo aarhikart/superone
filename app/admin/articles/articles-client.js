@@ -120,7 +120,7 @@ export default function ArticlesClient() {
     await loadArticles();
     setSuccess("Article deleted successfully.");
   }
-
+  const [activeViewArticle, setActiveViewArticle] = useState(null);
   return (
     <div className="grid gap-8">
       <div className="rounded-3xl bg-gradient-to-r from-orange-500 via-amber-400 to-lime-300 px-6 py-8 shadow-lg">
@@ -256,56 +256,182 @@ export default function ArticlesClient() {
           </div>
         </div>
       </div>
-
-      <section className="rounded-3xl bg-white p-6 shadow-sm ring-1 ring-stone-200">
-        <div className="flex items-center justify-between gap-4">
-          <div>
-            <h2 className="text-2xl font-semibold">Saved Articles</h2>
-            <p className="mt-1 text-sm text-stone-500">
-              Newly created or updated articles appear here immediately.
-            </p>
-          </div>
+ <section className="rounded-lg bg-white p-6 shadow-sm ring-1 ring-stone-200">
+      {/* Section Header */}
+      <div className="flex items-center justify-between gap-4">
+        <div>
+          <h2 className="text-2xl font-semibold text-stone-900">Saved Articles</h2>
+          <p className="mt-1 text-sm text-stone-500">
+            Newly created or updated articles appear here immediately.
+          </p>
         </div>
+      </div>
 
-        <div className="mt-6 grid gap-6 md:grid-cols-2 xl:grid-cols-3">
-          {articles.map((article) => (
-            <article
-              key={article._id}
-              className="overflow-hidden rounded-3xl border border-stone-200 bg-stone-50"
-            >
-              <img src={article.image} alt={article.title} className="h-52 w-full object-cover" />
-              <div className="p-5">
-                <h3 className="text-xl font-semibold">{article.title}</h3>
-                <p className="mt-3 line-clamp-4 text-sm leading-6 text-stone-600">
+      {/* Responsive Row List Layout */}
+      <div className="mt-6 flex flex-col gap-4">
+        {articles.map((article) => (
+          <article
+            key={article._id}
+            className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 rounded-lg border border-stone-200 bg-white p-4 shadow-sm transition hover:shadow-md"
+          >
+            {/* Left Section: Image, Title, and Link */}
+            <div className="flex flex-1 flex-col sm:flex-row sm:items-center gap-4 min-w-0">
+              {/* Rounded Brand/Article Image */}
+              <div className="h-12 w-12 flex-shrink-0 overflow-hidden rounded-xl bg-stone-100">
+                <img
+                  src={article.image}
+                  alt={article.title || "Article image"}
+                  className="h-full w-full object-cover"
+                />
+              </div>
+
+              {/* Grid of Text Information */}
+              <div className="grid flex-1 grid-cols-1 gap-2 sm:grid-cols-2 items-center">
+                {/* Title */}
+                <div className="min-w-0">
+                  <h3 className="truncate text-sm font-bold text-stone-900">{article.title}</h3>
+                </div>
+
+                {/* Live External Link */}
+                {article.liveUrl ? (
+                  <div>
+                    <a
+                      href={article.liveUrl}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="inline-flex items-center gap-1.5 rounded-full border border-orange-200 bg-orange-50 px-3 py-1 text-xs font-semibold text-orange-600 transition hover:bg-orange-100"
+                    >
+                      <span>View Live</span>
+                      <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                      </svg>
+                    </a>
+                  </div>
+                ) : null}
+              </div>
+            </div>
+
+            {/* Right Section: Short Description Snippet & Action Icons */}
+            <div className="flex items-center justify-between lg:justify-end gap-6 border-t border-stone-100 pt-3 lg:border-t-0 lg:pt-0">
+              {/* Description Snippet Data */}
+              <div className="flex items-center gap-2">
+                  <svg className="h-4 w-4 text-slate-400 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+                </svg>
+                <p className="truncate text-sm font-bold text-slate-900 max-w-[150px]">
                   {article.description}
                 </p>
-                <div className="mt-5 flex gap-3">
-                  <button
-                    type="button"
-                    onClick={() => handleEdit(article)}
-                    className="rounded-full bg-stone-900 px-4 py-2 text-sm font-semibold text-white transition hover:bg-stone-700"
-                  >
-                    Edit
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => handleDelete(article._id)}
-                    className="rounded-full bg-red-500 px-4 py-2 text-sm font-semibold text-white transition hover:bg-red-600"
-                  >
-                    Delete
-                  </button>
-                </div>
               </div>
-            </article>
-          ))}
-        </div>
 
-        {articles.length === 0 ? (
-          <div className="mt-6 rounded-3xl border border-dashed border-stone-300 px-6 py-12 text-center text-stone-500">
-            No articles found yet. Add your first article from the form above.
+              {/* Inline Action Buttons */}
+              <div className="flex items-center gap-1">
+                {/* View Eye Icon Button */}
+                <button
+                  type="button"
+                  onClick={() => setActiveViewArticle(article)}
+                  className="rounded-lg p-2 text-stone-400 hover:bg-stone-50 hover:text-emerald-600 transition"
+                  aria-label="View article details"
+                >
+                  <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                  </svg>
+                </button>
+
+                {/* Edit Icon Button */}
+                <button
+                  type="button"
+                  onClick={() => handleEdit(article)}
+                  className="rounded-lg p-2 text-stone-400 hover:bg-stone-50 hover:text-blue-600 transition"
+                  aria-label="Edit article"
+                >
+                  <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+                  </svg>
+                </button>
+
+                {/* Delete Icon Button */}
+                <button
+                  type="button"
+                  onClick={() => handleDelete(article._id)}
+                  className="rounded-lg p-2 text-stone-400 hover:bg-stone-50 hover:text-red-600 transition"
+                  aria-label="Delete article"
+                >
+                  <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                  </svg>
+                </button>
+              </div>
+            </div>
+          </article>
+        ))}
+      </div>
+
+      {/* Empty State Handler */}
+      {articles.length === 0 ? (
+        <div className="mt-6 rounded-3xl border border-dashed border-stone-300 px-6 py-12 text-center text-stone-500">
+          No articles found yet. Add your first article from the form above.
+        </div>
+      ) : null}
+
+      {/* Article Detail View Popup Modal */}
+      {activeViewArticle && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-stone-900/60 backdrop-blur-sm">
+          <div className="relative w-full max-w-lg overflow-hidden rounded-lg bg-white shadow-2xl transition-all border border-stone-100">
+            {/* Header image / banner wrapper */}
+            <div className="relative h-48 w-full bg-stone-100">
+              <img 
+                src={activeViewArticle.image} 
+                alt={activeViewArticle.title} 
+                className="h-full w-full object-cover" 
+              />
+              <button 
+                type="button"
+                onClick={() => setActiveViewArticle(null)}
+                className="absolute top-3 right-3 rounded-full bg-stone-900/50 p-2 text-white hover:bg-stone-900/80 transition"
+              >
+                <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+
+            {/* Content Body */}
+            <div className="p-6">
+              <h2 className="text-xl font-extrabold text-stone-900">{activeViewArticle.title}</h2>
+              
+              <div className="mt-4 border-t border-stone-100 pt-4">
+                <h4 className="text-xs font-bold uppercase tracking-wider text-stone-400">Description</h4>
+                <p className="mt-1 text-sm text-stone-600 leading-relaxed max-h-40 overflow-y-auto pr-1">
+                  {activeViewArticle.description}
+                </p>
+              </div>
+
+              {/* Action Actions inside Modal Footer */}
+              <div className="mt-6 flex items-center justify-between border-t border-stone-100 pt-4">
+                {activeViewArticle.liveUrl ? (
+                  <a
+                    href={activeViewArticle.liveUrl}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="inline-flex items-center gap-1.5 rounded-full border border-orange-500 px-4 py-1.5 text-xs font-semibold text-orange-600 transition hover:bg-orange-50"
+                  >
+                    <span>Visit Live Page</span>
+                    <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                    </svg>
+                  </a>
+                ) : <div />}
+                
+                <span className="text-[11px] text-stone-400 font-mono">
+                  Ref: {activeViewArticle._id.substring(0, 8)}...
+                </span>
+              </div>
+            </div>
           </div>
-        ) : null}
-      </section>
+        </div>
+      )}
+    </section>
     </div>
   );
 }

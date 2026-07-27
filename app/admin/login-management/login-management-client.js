@@ -6,6 +6,7 @@ const emptyForm = {
   username: "",
   password: "",
   role: "Admin",
+  email: "",
 };
 
 export default function LoginManagementClient({ initialUsers, currentUserId }) {
@@ -75,6 +76,7 @@ export default function LoginManagementClient({ initialUsers, currentUserId }) {
       username: user.username,
       password: "",
       role: user.role,
+      email: user.email || "",
     });
     setError("");
     setSuccess("");
@@ -152,6 +154,19 @@ export default function LoginManagementClient({ initialUsers, currentUserId }) {
           </label>
 
           <label className="grid gap-2">
+            <span className="text-sm font-medium text-slate-700">Email ID</span>
+            <input
+              type="email"
+              name="email"
+              value={form.email}
+              onChange={handleChange}
+              placeholder="admin@company.com"
+              className="rounded-2xl border border-slate-200 px-4 py-3 outline-none transition focus:border-cyan-500"
+              required
+            />
+          </label>
+
+          <label className="grid gap-2">
             <span className="text-sm font-medium text-slate-700">Role</span>
             <select
               name="role"
@@ -165,11 +180,11 @@ export default function LoginManagementClient({ initialUsers, currentUserId }) {
             </select>
           </label>
 
-          <div className="flex items-end gap-3">
+          <div className="flex items-end gap-3 lg:col-span-2 lg:justify-end mt-2">
             <button
               type="submit"
               disabled={isSubmitting}
-              className="w-full rounded-2xl bg-slate-950 px-5 py-3 text-sm font-semibold text-white transition hover:bg-cyan-500 disabled:cursor-not-allowed disabled:bg-slate-400"
+              className="w-full lg:w-auto rounded-2xl bg-slate-950 px-8 py-3 text-sm font-semibold text-white transition hover:bg-cyan-500 disabled:cursor-not-allowed disabled:bg-slate-400"
             >
               {isSubmitting
                 ? "Saving..."
@@ -214,7 +229,7 @@ export default function LoginManagementClient({ initialUsers, currentUserId }) {
           <table className="min-w-full divide-y divide-slate-200">
             <thead className="bg-slate-50">
               <tr>
-                {["Username", "Role", "Status", "Actions"].map((header) => (
+                {["Username", "Email ID", "Role", "Status", "Actions"].map((header) => (
                   <th
                     key={header}
                     className="px-6 py-4 text-left text-xs font-semibold uppercase tracking-[0.25em] text-slate-500"
@@ -228,6 +243,7 @@ export default function LoginManagementClient({ initialUsers, currentUserId }) {
               {users.map((user) => (
                 <tr key={user.id} className="hover:bg-slate-50">
                   <td className="px-6 py-5 text-sm font-semibold text-slate-900">{user.username}</td>
+                  <td className="px-6 py-5 text-sm text-slate-600 font-medium">{user.email || "—"}</td>
                   <td className="px-6 py-5 text-sm text-slate-600">{user.role}</td>
                   <td className="px-6 py-5 text-sm text-slate-600">
                     {user.id === currentUserId ? "Current session" : "Active"}

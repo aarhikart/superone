@@ -3,88 +3,93 @@ import Link from "next/link";
 import { ContentPageShell } from "@/app/_components/content/content-page-shell";
 import { PageHero } from "@/app/_components/content/page-hero";
 import { getPressReleases } from "@/lib/press-release-service";
-
+// import Hero from "../admin/_components/mediaPost/hero";
 /* eslint-disable @next/next/no-img-element */
 
 export const dynamic = "force-dynamic";
-
-function isValidLiveUrl(value) {
-  try {
-    const url = new URL(String(value || "").trim());
-    return url.protocol === "http:" || url.protocol === "https:";
-  } catch {
-    return false;
-  }
-}
 
 export default async function PressReleasesPage() {
   const pressReleases = await getPressReleases();
 
   return (
     <ContentPageShell surface="light">
-      <PageHero
-        eyebrow="Company News"
-        title="Press Releases"
-        description="Official company announcements, milestones, and public statements presented in a simple professional format."
-      />
+  {/* <Hero title="Prisma`s press releases" description="Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since 1966"/> */}
 
-      <section className="px-4 pb-20 sm:px-6 lg:px-8">
-        <div className="mx-auto max-w-7xl">
-          {pressReleases.length === 0 ? (
-            <div className="rounded-[32px] border border-slate-200 bg-white px-6 py-14 text-center text-slate-500 shadow-[0_16px_50px_rgba(148,163,184,0.12)]">
-              No press releases are available yet.
-            </div>
-          ) : (
-            <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
-              {pressReleases.map((pressRelease) => {
-                const liveUrl = String(pressRelease.liveUrl || "").trim();
-                const hasLiveUrl = isValidLiveUrl(liveUrl);
+<section className="bg-[#020618] px-4 py-16 sm:px-6 lg:px-8 text-white">
+      <div className="mx-auto max-w-7xl">
+        {/* Section Heading */}
+        <h2 className="mb-10 text-3xl  tracking-tight text-white sm:text-4xl">
+          Recent Post
+        </h2>
 
-                return (
-                  <article
-                    key={pressRelease._id.toString()}
-                    className="group overflow-hidden rounded-[32px] border border-slate-200 bg-white shadow-[0_16px_50px_rgba(148,163,184,0.12)] transition duration-300 hover:-translate-y-1 hover:border-cyan-300"
+        {pressReleases.length === 0 ? (
+          <div className="rounded-lg border border-white/10 bg-white/5 px-6 py-14 text-center text-slate-400">
+            No press releases are available yet.
+          </div>
+        ) : (
+          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+            {pressReleases.map((pressRelease) => (
+              <Link
+                key={pressRelease._id.toString()}
+                href={`/press-releases/${pressRelease._id}`}
+                className="group flex flex-col justify-between overflow-hidden rounded-lg border border-white/[0.06] bg-[#0d1425] p-5 transition duration-300 hover:border-cyan-500/40 hover:bg-[#0F1A30]"
+              >
+                <div>
+                  {/* Image Container with Absolute Badge */}
+                  <div className="relative overflow-hidden rounded-lg aspect-[16/10] w-full">
+                    <img
+                      src={pressRelease.image}
+                      alt={pressRelease.title || "Press release image"}
+                      className="h-full w-full object-cover transition duration-500 group-hover:scale-105"
+                    />
+                  </div>
+                  
+                  <div className="mt-5">
+                   
+                    {/* <span className="text-[11px] font-medium text-slate-500">
+                      Official Release
+                    </span> */}
+                    
+                    <h3 className="mt-3 text-xl font-semibold leading-snug text-slate-100 transition group-hover:text-white">
+                      {pressRelease.title}
+                    </h3>
+                    
+                    {pressRelease.description && (
+                      <p className="mt-3 line-clamp-3 text-sm leading-relaxed text-slate-400">
+                        {pressRelease.description}
+                      </p>
+                    )}
+                  </div>
+                </div>
+
+                {/* Footer Action Bar */}
+                <div className="mt-8 flex items-center justify-between border-t border-white/[0.04] pt-4 text-lg font-medium text-slate-500 transition group-hover:text-[#29adec]">
+                  <span>Open details</span>
+                  <svg
+                    className="h-6 w-6 transform transition-transform duration-300 group-hover:translate-x-1"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                    strokeWidth={2}
                   >
-                    <div className="overflow-hidden border-b border-slate-200">
-                      <img
-                        src={pressRelease.image}
-                        alt={pressRelease.title}
-                        className="h-60 w-full object-cover transition duration-500 group-hover:scale-[1.03]"
-                      />
-                    </div>
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      d="M5 12h14M12 5l7 7-7 7"
+                    />
+                  </svg>
+                </div>
+              </Link>
+            ))}
+          </div>
+        )}
+      </div>
+    </section>
 
-                    <div className="p-6">
-                      <p className="text-xs font-semibold uppercase tracking-[0.32em] text-cyan-700">Press Release</p>
-                      <h2 className="mt-4 font-display text-2xl font-semibold tracking-[-0.03em] text-slate-950 transition group-hover:text-cyan-800">
-                        {pressRelease.title}
-                      </h2>
-                      <p className="mt-4 line-clamp-3 text-sm leading-7 text-slate-600">{pressRelease.description}</p>
-                      <div className="mt-6 flex flex-wrap gap-2">
-                        <Link
-                          href={`/press-releases/${pressRelease._id}`}
-                          className="inline-flex items-center rounded-full border border-slate-200 bg-slate-50 px-4 py-2 text-sm font-semibold text-slate-800 transition group-hover:border-cyan-300 group-hover:text-cyan-800"
-                        >
-                          Open details
-                        </Link>
-                        {hasLiveUrl ? (
-                          <a
-                            href={liveUrl}
-                            target="_blank"
-                            rel="noreferrer"
-                            className="inline-flex items-center rounded-full border border-cyan-400/30 bg-cyan-400 px-4 py-2 text-sm font-semibold text-slate-950 transition hover:bg-white"
-                          >
-                            View Live Press Release
-                          </a>
-                        ) : null}
-                      </div>
-                    </div>
-                  </article>
-                );
-              })}
-            </div>
-          )}
-        </div>
-      </section>
+
+
+
+      
     </ContentPageShell>
   );
 }

@@ -27,6 +27,20 @@ const AdminUserSchema = new mongoose.Schema(
       type: Date,
       default: null,
     },
+    email: {
+      type: String,
+      trim: true,
+      lowercase: true,
+      default: "",
+    },
+    otpCode: {
+      type: String,
+      default: null,
+    },
+    otpExpiresAt: {
+      type: Date,
+      default: null,
+    },
   },
   { timestamps: true }
 );

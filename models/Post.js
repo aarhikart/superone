@@ -7,6 +7,10 @@ const PostSchema = new mongoose.Schema(
     description: String,
     date: String,
     image: String,
+    views: {
+      type: Number,
+      default: 0,
+    },
   },
   { timestamps: true }
 );

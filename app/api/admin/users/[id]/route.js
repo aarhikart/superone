@@ -17,9 +17,14 @@ export async function PUT(req, context) {
       typeof body?.username === "string" ? body.username.trim().toLowerCase() : "";
     const password = typeof body?.password === "string" ? body.password : "";
     const role = typeof body?.role === "string" ? body.role : "";
+    const email = typeof body?.email === "string" ? body.email.trim().toLowerCase() : "";
 
     if (!username || !Object.values(ADMIN_ROLES).includes(role)) {
       return Response.json({ error: "Username and role are required." }, { status: 400 });
+    }
+
+    if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      return Response.json({ error: "Invalid email format." }, { status: 400 });
     }
 
     await connectDB();
@@ -35,6 +40,13 @@ export async function PUT(req, context) {
       return Response.json({ error: "Username already exists." }, { status: 409 });
     }
 
+    if (email) {
+      const conflictingEmail = await AdminUser.findOne({ email, _id: { $ne: id } });
+      if (conflictingEmail) {
+        return Response.json({ error: "Email is already in use by another user." }, { status: 400 });
+      }
+    }
+
     if (userToUpdate.role === ADMIN_ROLES.ADMIN && role !== ADMIN_ROLES.ADMIN) {
       const adminCount = await AdminUser.countDocuments({ role: ADMIN_ROLES.ADMIN });
 
@@ -48,6 +60,7 @@ export async function PUT(req, context) {
 
     userToUpdate.username = username;
     userToUpdate.role = role;
+    userToUpdate.email = email;
 
     if (password.trim()) {
       userToUpdate.passwordHash = hashPassword(password);
@@ -60,6 +73,7 @@ export async function PUT(req, context) {
         id: userToUpdate._id.toString(),
         username: userToUpdate.username,
         role: userToUpdate.role,
+        email: userToUpdate.email || "",
         lastLoginAt: userToUpdate.lastLoginAt,
       },
     });
