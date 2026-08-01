@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import Link from "next/link";
 import { confirmAndDelete } from "../delete-helper";
 
@@ -35,6 +35,7 @@ export default function JobsClient({ currentUser }) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
+  const fileInputRef = useRef(null);
 
   // Workflow states
   const [reviewers, setReviewers] = useState([]);
@@ -78,6 +79,9 @@ export default function JobsClient({ currentUser }) {
     setEditId(null);
     setExistingImage("");
     setSelectedReviewerId("");
+    if (fileInputRef.current) {
+      fileInputRef.current.value = "";
+    }
   }
 
   function handleChange(event) {
@@ -392,9 +396,32 @@ export default function JobsClient({ currentUser }) {
           <label className="mt-5 grid gap-2">
             <span className="text-sm font-medium">Image Upload</span>
             <input
+              ref={fileInputRef}
               type="file"
               accept="image/*"
-              onChange={(event) => setImage(event.target.files?.[0] || null)}
+              onChange={(event) => {
+                const file = event.target.files?.[0] || null;
+                if (file) {
+                  if (!file.type.startsWith("image/")) {
+                    setError("Only image files are allowed.");
+                    setImage(null);
+                    if (fileInputRef.current) {
+                      fileInputRef.current.value = "";
+                    }
+                    return;
+                  }
+                  if (file.size > 5 * 1024 * 1024) {
+                    setError("Image size must be less than 5 MB.");
+                    setImage(null);
+                    if (fileInputRef.current) {
+                      fileInputRef.current.value = "";
+                    }
+                    return;
+                  }
+                }
+                setError("");
+                setImage(file);
+              }}
               className="rounded-2xl border border-dashed border-slate-300 bg-slate-50 px-4 py-3 text-sm"
             />
           </label>

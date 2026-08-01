@@ -4,6 +4,7 @@ import { useState } from "react";
 // All necessary icons imported from lucide-react
 import { Trash2, CheckCircle, Loader2, Eye, RefreshCw, X, ChevronLeft, ChevronRight, Calendar, CalendarDays, Layers, Search, XCircle } from "lucide-react"; 
 import FilterDropdown from "../_components/FilterDropdown";
+import Tooltip from "../_components/Tooltip";
 import { confirmAndDelete } from "../delete-helper";
 
 const RECORDS_PER_PAGE = 20;
@@ -298,61 +299,65 @@ export default function AdminJobApplicationsTabs({ applications: initialApplicat
                       
                       {tabType === "new" && (
                         <>
-                          <button
-                            onClick={() => handleMoveToReviewed(appIdString)}
-                            disabled={isUpdating === appIdString}
-                            className="text-emerald-500 hover:text-emerald-700 transition-colors p-2 rounded-full hover:bg-emerald-50 disabled:opacity-50"
-                            title="Mark as Reviewed"
-                          >
-                            {isUpdating === appIdString ? (
-                              <Loader2 size={18} className="animate-spin" />
-                            ) : (
-                              <CheckCircle size={18} />
-                            )}
-                          </button>
+                          <Tooltip content="Mark as Reviewed">
+                            <button
+                              onClick={() => handleMoveToReviewed(appIdString)}
+                              disabled={isUpdating === appIdString}
+                              className="text-emerald-500 hover:text-emerald-700 transition-colors p-2 rounded-full hover:bg-emerald-50 disabled:opacity-50"
+                            >
+                              {isUpdating === appIdString ? (
+                                <Loader2 size={18} className="animate-spin" />
+                              ) : (
+                                <CheckCircle size={18} />
+                              )}
+                            </button>
+                          </Tooltip>
 
-                          <button
-                            onClick={() => handleDelete(appIdString)}
-                            disabled={isDeleting === appIdString}
-                            className="text-red-500 hover:text-red-700 transition-colors p-2 rounded-full hover:bg-red-50 disabled:opacity-50"
-                            title="Delete Application"
-                          >
-                            <Trash2 size={18} />
-                          </button>
+                          <Tooltip content="Delete Application">
+                            <button
+                              onClick={() => handleDelete(appIdString)}
+                              disabled={isDeleting === appIdString}
+                              className="text-red-500 hover:text-red-700 transition-colors p-2 rounded-full hover:bg-red-50 disabled:opacity-50"
+                            >
+                              <Trash2 size={18} />
+                            </button>
+                          </Tooltip>
                         </>
                       )}
 
                       {tabType === "reviewed" && (
                         <>
-                          <button
-                            onClick={() => {
-                              // Find fresh app state parameters 
-                              const freshApp = applications.find(a => a._id.toString() === appIdString);
-                              setViewModalApp(freshApp || application);
-                            }}
-                            className="text-blue-500 hover:text-blue-700 transition-colors p-2 rounded-full hover:bg-blue-50"
-                            title="View Details"
-                          >
-                            <Eye size={18} />
-                          </button>
+                          <Tooltip content="View Details">
+                            <button
+                              onClick={() => {
+                                // Find fresh app state parameters 
+                                const freshApp = applications.find(a => a._id.toString() === appIdString);
+                                setViewModalApp(freshApp || application);
+                              }}
+                              className="text-blue-500 hover:text-blue-700 transition-colors p-2 rounded-full hover:bg-blue-50"
+                            >
+                              <Eye size={18} />
+                            </button>
+                          </Tooltip>
 
-                          <button
-                            onClick={() => {
-                              const freshApp = applications.find(a => a._id.toString() === appIdString);
-                              const currentApp = freshApp || application;
-                              setStatusModalApp(currentApp);
-                              setSelectedStatus(currentApp.status || "");
-                            }}
-                            disabled={isUpdating === appIdString}
-                            className="text-amber-500 hover:text-amber-700 transition-colors p-2 rounded-full hover:bg-amber-50 disabled:opacity-50"
-                            title="Update Status"
-                          >
-                            {isUpdating === appIdString ? (
-                              <Loader2 size={18} className="animate-spin" />
-                            ) : (
-                              <RefreshCw size={18} />
-                            )}
-                          </button>
+                          <Tooltip content="Update Status">
+                            <button
+                              onClick={() => {
+                                const freshApp = applications.find(a => a._id.toString() === appIdString);
+                                const currentApp = freshApp || application;
+                                setStatusModalApp(currentApp);
+                                setSelectedStatus(currentApp.status || "");
+                              }}
+                              disabled={isUpdating === appIdString}
+                              className="text-amber-500 hover:text-amber-700 transition-colors p-2 rounded-full hover:bg-amber-50 disabled:opacity-50"
+                            >
+                              {isUpdating === appIdString ? (
+                                <Loader2 size={18} className="animate-spin" />
+                              ) : (
+                                <RefreshCw size={18} />
+                              )}
+                            </button>
+                          </Tooltip>
                         </>
                       )}
 

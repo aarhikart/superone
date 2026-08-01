@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { confirmAndDelete } from "../delete-helper";
 
 export default function BlogsClient() {
@@ -15,6 +15,7 @@ export default function BlogsClient() {
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const fileInputRef = useRef(null);
 
   async function fetchPosts() {
     const res = await fetch("/api/posts", { cache: "no-store" });
@@ -38,6 +39,9 @@ export default function BlogsClient() {
     setImage(null);
     setEditId(null);
     setExistingImage("");
+    if (fileInputRef.current) {
+      fileInputRef.current.value = "";
+    }
   }
 
   async function handleSubmit(e) {
@@ -215,9 +219,33 @@ export default function BlogsClient() {
                 {editId ? "Replace Image (optional)" : "Feature Image"}
               </span>
               <input
+                ref={fileInputRef}
                 type="file"
+                accept="image/*"
                 className="block w-full min-w-0 rounded-2xl border border-dashed border-slate-300 bg-slate-50 px-4 py-3 text-sm"
-                onChange={(e) => setImage(e.target.files?.[0] || null)}
+                onChange={(e) => {
+                  const file = e.target.files?.[0] || null;
+                  if (file) {
+                    if (!file.type.startsWith("image/")) {
+                      setError("Only image files are allowed.");
+                      setImage(null);
+                      if (fileInputRef.current) {
+                        fileInputRef.current.value = "";
+                      }
+                      return;
+                    }
+                    if (file.size > 5 * 1024 * 1024) {
+                      setError("Image size must be less than 5 MB.");
+                      setImage(null);
+                      if (fileInputRef.current) {
+                        fileInputRef.current.value = "";
+                      }
+                      return;
+                    }
+                  }
+                  setError("");
+                  setImage(file);
+                }}
                 required={!editId}
               />
             </label>

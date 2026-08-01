@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { Trash2, CheckCircle, Loader2, Eye, RefreshCw, X, ChevronLeft, ChevronRight, Calendar, CalendarDays, Layers, Search, XCircle } from "lucide-react"; 
 import FilterDropdown from "../_components/FilterDropdown";
+import Tooltip from "../_components/Tooltip";
 import { confirmAndDelete } from "../delete-helper";
 
 const RECORDS_PER_PAGE = 20;
@@ -273,71 +274,76 @@ export default function AdminContactMessagesTabs({ messages: initialMessages }) 
                   )}
                   <td className="px-6 py-5 text-center">
                     <div className="flex items-center justify-center gap-2">
-                      <button
-                        onClick={() => {
-                          const freshMsg = messages.find(m => m._id.toString() === msgIdString);
-                          setViewModalMsg(freshMsg || msg);
-                        }}
-                        className="text-blue-500 hover:text-blue-700 transition-colors p-2 rounded-full hover:bg-blue-50"
-                        title="View Details"
-                      >
-                        <Eye size={18} />
-                      </button>
+                      <Tooltip content="View Details">
+                        <button
+                          onClick={() => {
+                            const freshMsg = messages.find(m => m._id.toString() === msgIdString);
+                            setViewModalMsg(freshMsg || msg);
+                          }}
+                          className="text-blue-500 hover:text-blue-700 transition-colors p-2 rounded-full hover:bg-blue-50"
+                        >
+                          <Eye size={18} />
+                        </button>
+                      </Tooltip>
 
                       {tabType === "new" && (
                         <>
-                          <button
-                            onClick={() => handleMoveToReviewed(msgIdString)}
-                            disabled={isUpdating === msgIdString}
-                            className="text-emerald-500 hover:text-emerald-700 transition-colors p-2 rounded-full hover:bg-emerald-50 disabled:opacity-50"
-                            title="Mark as Reviewed"
-                          >
-                            {isUpdating === msgIdString ? (
-                              <Loader2 size={18} className="animate-spin" />
-                            ) : (
-                              <CheckCircle size={18} />
-                            )}
-                          </button>
+                          <Tooltip content="Mark as Reviewed">
+                            <button
+                              onClick={() => handleMoveToReviewed(msgIdString)}
+                              disabled={isUpdating === msgIdString}
+                              className="text-emerald-500 hover:text-emerald-700 transition-colors p-2 rounded-full hover:bg-emerald-50 disabled:opacity-50"
+                            >
+                              {isUpdating === msgIdString ? (
+                                <Loader2 size={18} className="animate-spin" />
+                              ) : (
+                                <CheckCircle size={18} />
+                              )}
+                            </button>
+                          </Tooltip>
 
-                          <button
-                            onClick={() => handleDelete(msgIdString)}
-                            disabled={isDeleting === msgIdString}
-                            className="text-red-500 hover:text-red-700 transition-colors p-2 rounded-full hover:bg-red-50 disabled:opacity-50"
-                            title="Delete Message"
-                          >
-                            <Trash2 size={18} />
-                          </button>
+                          <Tooltip content="Delete Message">
+                            <button
+                              onClick={() => handleDelete(msgIdString)}
+                              disabled={isDeleting === msgIdString}
+                              className="text-red-500 hover:text-red-700 transition-colors p-2 rounded-full hover:bg-red-50 disabled:opacity-50"
+                            >
+                              <Trash2 size={18} />
+                            </button>
+                          </Tooltip>
                         </>
                       )}
 
                       {tabType === "reviewed" && (
                         <>
-                          <button
-                            onClick={() => {
-                              const freshMsg = messages.find(m => m._id.toString() === msgIdString);
-                              const currentMsg = freshMsg || msg;
-                              setStatusModalMsg(currentMsg);
-                              setSelectedStatus(currentMsg.status || "");
-                            }}
-                            disabled={isUpdating === msgIdString}
-                            className="text-amber-500 hover:text-amber-700 transition-colors p-2 rounded-full hover:bg-amber-50 disabled:opacity-50"
-                            title="Update Status"
-                          >
-                            {isUpdating === msgIdString ? (
-                              <Loader2 size={18} className="animate-spin" />
-                            ) : (
-                              <RefreshCw size={18} />
-                            )}
-                          </button>
+                          <Tooltip content="Update Status">
+                            <button
+                              onClick={() => {
+                                const freshMsg = messages.find(m => m._id.toString() === msgIdString);
+                                const currentMsg = freshMsg || msg;
+                                setStatusModalMsg(currentMsg);
+                                setSelectedStatus(currentMsg.status || "");
+                              }}
+                              disabled={isUpdating === msgIdString}
+                              className="text-amber-500 hover:text-amber-700 transition-colors p-2 rounded-full hover:bg-amber-50 disabled:opacity-50"
+                            >
+                              {isUpdating === msgIdString ? (
+                                <Loader2 size={18} className="animate-spin" />
+                              ) : (
+                                <RefreshCw size={18} />
+                              )}
+                            </button>
+                          </Tooltip>
                           
-                          <button
-                            onClick={() => handleDelete(msgIdString)}
-                            disabled={isDeleting === msgIdString}
-                            className="text-red-500 hover:text-red-700 transition-colors p-2 rounded-full hover:bg-red-50 disabled:opacity-50"
-                            title="Delete Message"
-                          >
-                            <Trash2 size={18} />
-                          </button>
+                          <Tooltip content="Delete Message">
+                            <button
+                              onClick={() => handleDelete(msgIdString)}
+                              disabled={isDeleting === msgIdString}
+                              className="text-red-500 hover:text-red-700 transition-colors p-2 rounded-full hover:bg-red-50 disabled:opacity-50"
+                            >
+                              <Trash2 size={18} />
+                            </button>
+                          </Tooltip>
                         </>
                       )}
                     </div>

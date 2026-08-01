@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { confirmAndDelete } from "../delete-helper";
 
 const initialForm = {
@@ -18,6 +18,7 @@ export default function ArticlesClient() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
+  const fileInputRef = useRef(null);
 
   async function loadArticles() {
     const res = await fetch("/api/articles", { cache: "no-store" });
@@ -38,6 +39,9 @@ export default function ArticlesClient() {
     setImage(null);
     setEditId(null);
     setExistingImage("");
+    if (fileInputRef.current) {
+      fileInputRef.current.value = "";
+    }
   }
 
   function handleChange(e) {
@@ -208,9 +212,32 @@ export default function ArticlesClient() {
                 {editId ? "Replace Image (optional)" : "Upload Image"}
               </span>
               <input
+                ref={fileInputRef}
                 type="file"
                 accept="image/*"
-                onChange={(e) => setImage(e.target.files?.[0] || null)}
+                onChange={(e) => {
+                  const file = e.target.files?.[0] || null;
+                  if (file) {
+                    if (!file.type.startsWith("image/")) {
+                      setError("Only image files are allowed.");
+                      setImage(null);
+                      if (fileInputRef.current) {
+                        fileInputRef.current.value = "";
+                      }
+                      return;
+                    }
+                    if (file.size > 5 * 1024 * 1024) {
+                      setError("Image size must be less than 5 MB.");
+                      setImage(null);
+                      if (fileInputRef.current) {
+                        fileInputRef.current.value = "";
+                      }
+                      return;
+                    }
+                  }
+                  setError("");
+                  setImage(file);
+                }}
                 className="rounded-2xl border border-dashed border-stone-300 bg-stone-50 px-4 py-3 text-sm"
                 required={!editId}
               />
