@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { Trash2, CheckCircle, Loader2, Eye, RefreshCw, X, ChevronLeft, ChevronRight, Calendar, CalendarDays, Layers, Search, XCircle } from "lucide-react"; 
 import FilterDropdown from "../_components/FilterDropdown";
+import { confirmAndDelete } from "../delete-helper";
 
 const RECORDS_PER_PAGE = 20;
 
@@ -26,10 +27,9 @@ export default function AdminPocRequestsTabs({ requests: initialRequests }) {
   const [statusFilter, setStatusFilter] = useState("all");
   const [currentPage, setCurrentPage] = useState(1);
 
-  // Month & Year Filter state (default to current month and current year)
-  const currentDate = new Date();
-  const [selectedMonth, setSelectedMonth] = useState(currentDate.getMonth());
-  const [selectedYear, setSelectedYear] = useState(currentDate.getFullYear());
+  // Month & Year Filter state (default to all months and all years)
+  const [selectedMonth, setSelectedMonth] = useState("all");
+  const [selectedYear, setSelectedYear] = useState("all");
 
   // Modal control states
   const [statusModalReq, setStatusModalReq] = useState(null);
@@ -44,7 +44,9 @@ export default function AdminPocRequestsTabs({ requests: initialRequests }) {
   const periodRequests = reviewedRequests.filter((req) => {
     if (!req.createdAt) return false;
     const date = new Date(req.createdAt);
-    return date.getMonth() === selectedMonth && date.getFullYear() === selectedYear;
+    const monthMatch = selectedMonth === "all" || date.getMonth() === selectedMonth;
+    const yearMatch = selectedYear === "all" || date.getFullYear() === selectedYear;
+    return monthMatch && yearMatch;
   });
 
   const filteredRequests = periodRequests.filter((req) => {
@@ -52,6 +54,7 @@ export default function AdminPocRequestsTabs({ requests: initialRequests }) {
   });
 
   const monthOptions = [
+    { value: "all", label: "All Months", icon: <Calendar size={16} /> },
     { value: 0, label: "January", icon: <Calendar size={16} /> },
     { value: 1, label: "February", icon: <Calendar size={16} /> },
     { value: 2, label: "March", icon: <Calendar size={16} /> },
@@ -67,10 +70,13 @@ export default function AdminPocRequestsTabs({ requests: initialRequests }) {
   ];
 
   const currentYearVal = new Date().getFullYear();
-  const yearOptions = Array.from({ length: 6 }, (_, i) => {
-    const y = currentYearVal - i;
-    return { value: y, label: String(y), icon: <CalendarDays size={16} /> };
-  });
+  const yearOptions = [
+    { value: "all", label: "All Years", icon: <CalendarDays size={16} /> },
+    ...Array.from({ length: 6 }, (_, i) => {
+      const y = currentYearVal - i;
+      return { value: y, label: String(y), icon: <CalendarDays size={16} /> };
+    }),
+  ];
 
   const standardStatuses = ["reviewed", "under review", "approved", "rejected"];
   const allDbStatuses = Array.from(new Set([...standardStatuses, ...reviewedRequests.map(req => req.status).filter(Boolean)]));
@@ -205,24 +211,29 @@ export default function AdminPocRequestsTabs({ requests: initialRequests }) {
   };
 
   const handleDelete = async (id) => {
-    if (!confirm("Are you sure you want to delete this POC request?")) return;
-
-    setIsDeleting(id);
     try {
-      const res = await fetch(`/api/poc-requests/${id}`, {
-        method: "DELETE",
+      const result = await confirmAndDelete({
+        title: "Delete POC Request?",
+        text: "Are you sure you want to delete this POC request? This action cannot be undone.",
+        successText: "POC request deleted successfully.",
+        defaultErrorText: "Failed to delete request from database.",
+        deleteFn: async () => {
+          setIsDeleting(id);
+          try {
+            return await fetch(`/api/poc-requests/${id}`, {
+              method: "DELETE",
+            });
+          } finally {
+            setIsDeleting(null);
+          }
+        }
       });
 
-      if (res.ok) {
+      if (result && result.success) {
         setRequests(requests.filter((req) => req._id !== id));
-      } else {
-        alert("Failed to delete request from database.");
       }
     } catch (error) {
       console.error("Error deleting request:", error);
-      alert("Something went wrong.");
-    } finally {
-      setIsDeleting(null);
     }
   };
 

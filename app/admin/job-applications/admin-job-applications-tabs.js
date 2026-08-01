@@ -4,6 +4,7 @@ import { useState } from "react";
 // All necessary icons imported from lucide-react
 import { Trash2, CheckCircle, Loader2, Eye, RefreshCw, X, ChevronLeft, ChevronRight, Calendar, CalendarDays, Layers, Search, XCircle } from "lucide-react"; 
 import FilterDropdown from "../_components/FilterDropdown";
+import { confirmAndDelete } from "../delete-helper";
 
 const RECORDS_PER_PAGE = 20;
 
@@ -31,10 +32,9 @@ export default function AdminJobApplicationsTabs({ applications: initialApplicat
   const [statusFilter, setStatusFilter] = useState("all");
   const [currentPage, setCurrentPage] = useState(1);
 
-  // Month & Year Filter state (default to current month and current year)
-  const currentDate = new Date();
-  const [selectedMonth, setSelectedMonth] = useState(currentDate.getMonth());
-  const [selectedYear, setSelectedYear] = useState(currentDate.getFullYear());
+  // Month & Year Filter state (default to all months and all years)
+  const [selectedMonth, setSelectedMonth] = useState("all");
+  const [selectedYear, setSelectedYear] = useState("all");
 
   // Modal control states
   const [statusModalApp, setStatusModalApp] = useState(null);
@@ -49,7 +49,9 @@ export default function AdminJobApplicationsTabs({ applications: initialApplicat
   const periodApplications = reviewedApplications.filter((app) => {
     if (!app.createdAt) return false;
     const date = new Date(app.createdAt);
-    return date.getMonth() === selectedMonth && date.getFullYear() === selectedYear;
+    const monthMatch = selectedMonth === "all" || date.getMonth() === selectedMonth;
+    const yearMatch = selectedYear === "all" || date.getFullYear() === selectedYear;
+    return monthMatch && yearMatch;
   });
 
   const filteredApplications = periodApplications.filter((app) => {
@@ -57,6 +59,7 @@ export default function AdminJobApplicationsTabs({ applications: initialApplicat
   });
 
   const monthOptions = [
+    { value: "all", label: "All Months", icon: <Calendar size={16} /> },
     { value: 0, label: "January", icon: <Calendar size={16} /> },
     { value: 1, label: "February", icon: <Calendar size={16} /> },
     { value: 2, label: "March", icon: <Calendar size={16} /> },
@@ -72,10 +75,13 @@ export default function AdminJobApplicationsTabs({ applications: initialApplicat
   ];
 
   const currentYearVal = new Date().getFullYear();
-  const yearOptions = Array.from({ length: 6 }, (_, i) => {
-    const y = currentYearVal - i;
-    return { value: y, label: String(y), icon: <CalendarDays size={16} /> };
-  });
+  const yearOptions = [
+    { value: "all", label: "All Years", icon: <CalendarDays size={16} /> },
+    ...Array.from({ length: 6 }, (_, i) => {
+      const y = currentYearVal - i;
+      return { value: y, label: String(y), icon: <CalendarDays size={16} /> };
+    }),
+  ];
 
   const standardStatuses = ["reviewed", "under review", "shortlisted", "not shortlisted"];
   const allDbStatuses = Array.from(new Set([...standardStatuses, ...reviewedApplications.map(app => app.status).filter(Boolean)]));
@@ -215,24 +221,29 @@ export default function AdminJobApplicationsTabs({ applications: initialApplicat
   };
 
   const handleDelete = async (id) => {
-    if (!confirm("Are you sure you want to delete this application?")) return;
-
-    setIsDeleting(id);
     try {
-      const res = await fetch(`/api/job-applications/${id}`, {
-        method: "DELETE",
+      const result = await confirmAndDelete({
+        title: "Delete Application?",
+        text: "Are you sure you want to delete this application? This action cannot be undone.",
+        successText: "Application deleted successfully.",
+        defaultErrorText: "Failed to delete application from database.",
+        deleteFn: async () => {
+          setIsDeleting(id);
+          try {
+            return await fetch(`/api/job-applications/${id}`, {
+              method: "DELETE",
+            });
+          } finally {
+            setIsDeleting(null);
+          }
+        }
       });
 
-      if (res.ok) {
+      if (result && result.success) {
         setApplications(applications.filter((app) => app._id !== id));
-      } else {
-        alert("Failed to delete application from database.");
       }
     } catch (error) {
       console.error("Error deleting application:", error);
-      alert("Something went wrong.");
-    } finally {
-      setIsDeleting(null);
     }
   };
 

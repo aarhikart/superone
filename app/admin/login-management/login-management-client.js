@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { confirmAndDelete } from "../delete-helper";
 
 const emptyForm = {
   username: "",
@@ -87,23 +88,27 @@ export default function LoginManagementClient({ initialUsers, currentUserId }) {
     setError("");
     setSuccess("");
 
-    const response = await fetch(`/api/admin/users/${id}`, {
-      method: "DELETE",
+    const result = await confirmAndDelete({
+      title: "Remove Login Access?",
+      text: "Are you sure you want to remove this user's login access? This action cannot be undone.",
+      successText: "Login access removed successfully.",
+      defaultErrorText: "Unable to delete user.",
+      deleteFn: async () => {
+        return await fetch(`/api/admin/users/${id}`, {
+          method: "DELETE",
+        });
+      }
     });
-    const data = await response.json();
 
-    if (!response.ok) {
-      setError(data.error || "Unable to delete user.");
-      return;
+    if (result && result.success) {
+      setUsers((current) => current.filter((user) => user.id !== id));
+      if (editingId === id) {
+        resetForm();
+      }
+      setSuccess("Login access removed successfully.");
+    } else if (result) {
+      setError(result.error || "Unable to delete user.");
     }
-
-    setUsers((current) => current.filter((user) => user.id !== id));
-
-    if (editingId === id) {
-      resetForm();
-    }
-
-    setSuccess("Login access removed successfully.");
   }
 
   return (

@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { confirmAndDelete } from "../delete-helper";
 
 const initialForm = {
   title: "",
@@ -106,23 +107,27 @@ export default function PressReleasesClient() {
     setError("");
     setSuccess("");
 
-    const res = await fetch(`/api/press-releases/${id}`, {
-      method: "DELETE",
+    const result = await confirmAndDelete({
+      title: "Delete Press Release?",
+      text: "Are you sure you want to delete this press release? This action cannot be undone.",
+      successText: "Press release deleted successfully.",
+      defaultErrorText: "Unable to delete press release.",
+      deleteFn: async () => {
+        return await fetch(`/api/press-releases/${id}`, {
+          method: "DELETE",
+        });
+      }
     });
 
-    const data = await res.json();
-
-    if (!res.ok) {
-      setError(data.error || "Unable to delete press release.");
-      return;
+    if (result && result.success) {
+      if (editId === id) {
+        resetForm();
+      }
+      await loadPressReleases();
+      setSuccess("Press release deleted successfully.");
+    } else if (result) {
+      setError(result.error || "Unable to delete press release.");
     }
-
-    if (editId === id) {
-      resetForm();
-    }
-
-    await loadPressReleases();
-    setSuccess("Press release deleted successfully.");
   }
  const [activeViewArticle, setActiveViewArticle] = useState(null);
   return (

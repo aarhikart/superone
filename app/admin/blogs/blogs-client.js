@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { confirmAndDelete } from "../delete-helper";
 
 export default function BlogsClient() {
   const [title, setTitle] = useState("");
@@ -103,23 +104,28 @@ export default function BlogsClient() {
     setError("");
     setSuccess("");
 
-    const response = await fetch("/api/posts", {
-      method: "DELETE",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ id }),
+    const result = await confirmAndDelete({
+      title: "Delete Blog?",
+      text: "Are you sure you want to delete this blog? This action cannot be undone.",
+      successText: "Blog deleted successfully.",
+      defaultErrorText: "Unable to delete blog.",
+      deleteFn: async () => {
+        return await fetch("/api/posts", {
+          method: "DELETE",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ id }),
+        });
+      }
     });
 
-    const data = await response.json();
-
-    if (!response.ok) {
-      setError(data.error || "Unable to delete blog.");
-      return;
+    if (result && result.success) {
+      await fetchPosts();
+      setSuccess("Blog deleted successfully.");
+    } else if (result) {
+      setError(result.error || "Unable to delete blog.");
     }
-
-    await fetchPosts();
-    setSuccess("Blog deleted successfully.");
   }
 
   function handleEdit(post) {

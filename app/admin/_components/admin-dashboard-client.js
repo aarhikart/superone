@@ -23,11 +23,11 @@ export default function AdminDashboardClient({
   recentAlertsList,
   topBlogs,
 }) {
-  const currentDate = new Date();
-  const [selectedMonth, setSelectedMonth] = useState(currentDate.getMonth()); // 0-11
-  const [selectedYear, setSelectedYear] = useState(currentDate.getFullYear());
+  const [selectedMonth, setSelectedMonth] = useState("all");
+  const [selectedYear, setSelectedYear] = useState("all");
 
   const monthOptions = [
+    { value: "all", label: "All Months", icon: <Calendar size={16} /> },
     { value: 0, label: "January", icon: <Calendar size={16} /> },
     { value: 1, label: "February", icon: <Calendar size={16} /> },
     { value: 2, label: "March", icon: <Calendar size={16} /> },
@@ -43,28 +43,37 @@ export default function AdminDashboardClient({
   ];
 
   const currentYearVal = new Date().getFullYear();
-  const yearOptions = Array.from({ length: 6 }, (_, i) => {
-    const y = currentYearVal - i;
-    return { value: y, label: String(y), icon: <CalendarDays size={16} /> };
-  });
+  const yearOptions = [
+    { value: "all", label: "All Years", icon: <CalendarDays size={16} /> },
+    ...Array.from({ length: 6 }, (_, i) => {
+      const y = currentYearVal - i;
+      return { value: y, label: String(y), icon: <CalendarDays size={16} /> };
+    }),
+  ];
 
   // Filter lists based on selectedMonth and selectedYear
   const filteredJobApps = jobApps.filter((app) => {
     if (!app.createdAt) return false;
     const date = new Date(app.createdAt);
-    return date.getMonth() === selectedMonth && date.getFullYear() === selectedYear;
+    const monthMatch = selectedMonth === "all" || date.getMonth() === selectedMonth;
+    const yearMatch = selectedYear === "all" || date.getFullYear() === selectedYear;
+    return monthMatch && yearMatch;
   });
 
   const filteredPocReqs = pocReqs.filter((req) => {
     if (!req.createdAt) return false;
     const date = new Date(req.createdAt);
-    return date.getMonth() === selectedMonth && date.getFullYear() === selectedYear;
+    const monthMatch = selectedMonth === "all" || date.getMonth() === selectedMonth;
+    const yearMatch = selectedYear === "all" || date.getFullYear() === selectedYear;
+    return monthMatch && yearMatch;
   });
 
   const filteredContactMsgs = contactMsgs.filter((msg) => {
     if (!msg.createdAt) return false;
     const date = new Date(msg.createdAt);
-    return date.getMonth() === selectedMonth && date.getFullYear() === selectedYear;
+    const monthMatch = selectedMonth === "all" || date.getMonth() === selectedMonth;
+    const yearMatch = selectedYear === "all" || date.getFullYear() === selectedYear;
+    return monthMatch && yearMatch;
   });
 
   // Re-compute Job Applications Stats for the selected period

@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import { confirmAndDelete } from "../delete-helper";
 
 const initialSection = { title: "", description: "" };
 const initialForm = {
@@ -195,28 +196,30 @@ export default function JobsClient({ currentUser }) {
   }
 
   async function handleDelete(id) {
-    if (!confirm("Are you sure you want to delete this job?")) return;
-
     setError("");
     setSuccess("");
 
-    const res = await fetch(`/api/jobs/${id}`, {
-      method: "DELETE",
+    const result = await confirmAndDelete({
+      title: "Delete Job?",
+      text: "Are you sure you want to delete this job? This action cannot be undone.",
+      successText: "Job deleted successfully.",
+      defaultErrorText: "Unable to delete job.",
+      deleteFn: async () => {
+        return await fetch(`/api/jobs/${id}`, {
+          method: "DELETE",
+        });
+      }
     });
 
-    const data = await res.json();
-
-    if (!res.ok) {
-      setError(data.error || "Unable to delete job.");
-      return;
+    if (result && result.success) {
+      if (editId === id) {
+        resetForm();
+      }
+      await loadJobs();
+      setSuccess("Job deleted successfully.");
+    } else if (result) {
+      setError(result.error || "Unable to delete job.");
     }
-
-    if (editId === id) {
-      resetForm();
-    }
-
-    await loadJobs();
-    setSuccess("Job deleted successfully.");
   }
 
   const allPostingsCount = jobs.length;

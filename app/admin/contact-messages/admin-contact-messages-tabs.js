@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { Trash2, CheckCircle, Loader2, Eye, RefreshCw, X, ChevronLeft, ChevronRight, Calendar, CalendarDays, Layers, Search, XCircle } from "lucide-react"; 
 import FilterDropdown from "../_components/FilterDropdown";
+import { confirmAndDelete } from "../delete-helper";
 
 const RECORDS_PER_PAGE = 20;
 
@@ -26,10 +27,9 @@ export default function AdminContactMessagesTabs({ messages: initialMessages }) 
   const [statusFilter, setStatusFilter] = useState("all");
   const [currentPage, setCurrentPage] = useState(1);
 
-  // Month & Year Filter state (default to current month and current year)
-  const currentDate = new Date();
-  const [selectedMonth, setSelectedMonth] = useState(currentDate.getMonth());
-  const [selectedYear, setSelectedYear] = useState(currentDate.getFullYear());
+  // Month & Year Filter state (default to all months and all years)
+  const [selectedMonth, setSelectedMonth] = useState("all");
+  const [selectedYear, setSelectedYear] = useState("all");
 
   // Modal control states
   const [statusModalMsg, setStatusModalMsg] = useState(null);
@@ -44,7 +44,9 @@ export default function AdminContactMessagesTabs({ messages: initialMessages }) 
   const periodMessages = reviewedMessages.filter((msg) => {
     if (!msg.createdAt) return false;
     const date = new Date(msg.createdAt);
-    return date.getMonth() === selectedMonth && date.getFullYear() === selectedYear;
+    const monthMatch = selectedMonth === "all" || date.getMonth() === selectedMonth;
+    const yearMatch = selectedYear === "all" || date.getFullYear() === selectedYear;
+    return monthMatch && yearMatch;
   });
 
   const filteredMessages = periodMessages.filter((msg) => {
@@ -52,6 +54,7 @@ export default function AdminContactMessagesTabs({ messages: initialMessages }) 
   });
 
   const monthOptions = [
+    { value: "all", label: "All Months", icon: <Calendar size={16} /> },
     { value: 0, label: "January", icon: <Calendar size={16} /> },
     { value: 1, label: "February", icon: <Calendar size={16} /> },
     { value: 2, label: "March", icon: <Calendar size={16} /> },
@@ -67,10 +70,13 @@ export default function AdminContactMessagesTabs({ messages: initialMessages }) 
   ];
 
   const currentYearVal = new Date().getFullYear();
-  const yearOptions = Array.from({ length: 6 }, (_, i) => {
-    const y = currentYearVal - i;
-    return { value: y, label: String(y), icon: <CalendarDays size={16} /> };
-  });
+  const yearOptions = [
+    { value: "all", label: "All Years", icon: <CalendarDays size={16} /> },
+    ...Array.from({ length: 6 }, (_, i) => {
+      const y = currentYearVal - i;
+      return { value: y, label: String(y), icon: <CalendarDays size={16} /> };
+    }),
+  ];
 
   const standardStatuses = ["reviewed", "under review", "contacted", "ignored"];
   const allDbStatuses = Array.from(new Set([...standardStatuses, ...reviewedMessages.map(msg => msg.status).filter(Boolean)]));
@@ -205,24 +211,29 @@ export default function AdminContactMessagesTabs({ messages: initialMessages }) 
   };
 
   const handleDelete = async (id) => {
-    if (!confirm("Are you sure you want to delete this contact message?")) return;
-
-    setIsDeleting(id);
     try {
-      const res = await fetch(`/api/contact-messages/${id}`, {
-        method: "DELETE",
+      const result = await confirmAndDelete({
+        title: "Delete Contact Message?",
+        text: "Are you sure you want to delete this contact message? This action cannot be undone.",
+        successText: "Contact message deleted successfully.",
+        defaultErrorText: "Failed to delete message from database.",
+        deleteFn: async () => {
+          setIsDeleting(id);
+          try {
+            return await fetch(`/api/contact-messages/${id}`, {
+              method: "DELETE",
+            });
+          } finally {
+            setIsDeleting(null);
+          }
+        }
       });
 
-      if (res.ok) {
+      if (result && result.success) {
         setMessages(messages.filter((msg) => msg._id !== id));
-      } else {
-        alert("Failed to delete message from database.");
       }
     } catch (error) {
       console.error("Error deleting message:", error);
-      alert("Something went wrong.");
-    } finally {
-      setIsDeleting(null);
     }
   };
 

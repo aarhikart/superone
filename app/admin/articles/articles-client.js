@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { confirmAndDelete } from "../delete-helper";
 
 const initialForm = {
   title: "",
@@ -102,23 +103,27 @@ export default function ArticlesClient() {
     setError("");
     setSuccess("");
 
-    const res = await fetch(`/api/articles/${id}`, {
-      method: "DELETE",
+    const result = await confirmAndDelete({
+      title: "Delete Article?",
+      text: "Are you sure you want to delete this article? This action cannot be undone.",
+      successText: "Article deleted successfully.",
+      defaultErrorText: "Unable to delete article.",
+      deleteFn: async () => {
+        return await fetch(`/api/articles/${id}`, {
+          method: "DELETE",
+        });
+      }
     });
 
-    const data = await res.json();
-
-    if (!res.ok) {
-      setError(data.error || "Unable to delete article.");
-      return;
+    if (result && result.success) {
+      if (editId === id) {
+        resetForm();
+      }
+      await loadArticles();
+      setSuccess("Article deleted successfully.");
+    } else if (result) {
+      setError(result.error || "Unable to delete article.");
     }
-
-    if (editId === id) {
-      resetForm();
-    }
-
-    await loadArticles();
-    setSuccess("Article deleted successfully.");
   }
   const [activeViewArticle, setActiveViewArticle] = useState(null);
   return (
