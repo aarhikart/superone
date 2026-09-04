@@ -21,6 +21,8 @@ export default function ManualCelebrationModal({
     new Date().toISOString().split("T")[0]
   );
   const [message, setMessage] = useState("");
+  const [customImage, setCustomImage] = useState(null);
+  const [customImagePreview, setCustomImagePreview] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState("");
 
@@ -57,6 +59,19 @@ export default function ManualCelebrationModal({
     }
   }, [celebrationType, employeeName]);
 
+  const handleImageChange = (e) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      if (file.size > 5 * 1024 * 1024) {
+        setError("Image size should be less than 5MB");
+        return;
+      }
+      setCustomImage(file);
+      setCustomImagePreview(URL.createObjectURL(file));
+      setError("");
+    }
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!employeeName.trim() || !employeeEmail.trim() || !customTitle.trim() || !celebrationDate) {
@@ -68,20 +83,23 @@ export default function ManualCelebrationModal({
     setError("");
 
     try {
+      const formData = new FormData();
+      if (selectedEmployeeId) formData.append("employeeId", selectedEmployeeId);
+      formData.append("employeeName", employeeName.trim());
+      formData.append("employeeEmail", employeeEmail.trim());
+      formData.append("jobTitle", jobTitle.trim());
+      formData.append("department", department.trim());
+      formData.append("celebrationType", celebrationType);
+      formData.append("customTitle", customTitle.trim());
+      formData.append("celebrationDate", celebrationDate);
+      formData.append("message", message.trim());
+      if (customImage) {
+        formData.append("customImage", customImage);
+      }
+
       const res = await fetch("/api/celebrations", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          employeeId: selectedEmployeeId || null,
-          employeeName: employeeName.trim(),
-          employeeEmail: employeeEmail.trim(),
-          jobTitle: jobTitle.trim(),
-          department: department.trim(),
-          celebrationType,
-          customTitle: customTitle.trim(),
-          celebrationDate,
-          message: message.trim(),
-        }),
+        body: formData,
       });
 
       const data = await res.json();
@@ -232,13 +250,13 @@ export default function ManualCelebrationModal({
 
           <div>
             <label className="block text-xs font-semibold text-slate-700">
-              Celebration Card Title *
+              {celebrationType === "Custom" ? "Custom Event Title *" : "Celebration Card Title *"}
             </label>
             <input
               type="text"
               value={customTitle}
               onChange={(e) => setCustomTitle(e.target.value)}
-              placeholder="e.g. Congratulations on 5 Years, Sarah!"
+              placeholder={celebrationType === "Custom" ? "e.g. Happy Promotion, Sarah!" : "e.g. Congratulations on 5 Years, Sarah!"}
               required
               className="mt-1 w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#4318FF]/20"
             />
@@ -256,6 +274,39 @@ export default function ManualCelebrationModal({
               className="mt-1 w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#4318FF]/20"
             />
           </div>
+
+          {celebrationType === "Custom" && (
+            <div className="rounded-xl border border-dashed border-slate-300 p-4 bg-slate-50">
+              <label className="block text-xs font-semibold text-slate-700 mb-2">
+                Custom Event Image (Optional)
+              </label>
+              <div className="flex items-center gap-4">
+                {customImagePreview && (
+                  <img
+                    src={customImagePreview}
+                    alt="Preview"
+                    className="h-16 w-16 rounded-xl object-cover border border-slate-200 shadow-sm"
+                  />
+                )}
+                <div className="flex-1">
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={handleImageChange}
+                    className="block w-full text-xs text-slate-500
+                      file:mr-4 file:py-2 file:px-4
+                      file:rounded-full file:border-0
+                      file:text-xs file:font-semibold
+                      file:bg-indigo-50 file:text-[#4318FF]
+                      hover:file:bg-indigo-100 transition"
+                  />
+                  <p className="mt-1 text-[10px] text-slate-500">
+                    Recommended: 1200x630px JPG or PNG (Max 5MB)
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
 
           {/* Footer */}
           <div className="pt-3 border-t border-slate-100 flex items-center justify-end gap-3">

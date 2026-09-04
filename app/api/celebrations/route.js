@@ -55,7 +55,24 @@ export async function POST(req) {
   }
 
   try {
-    const body = await req.json();
+    const contentType = req.headers.get("content-type") || "";
+    let body = {};
+
+    if (contentType.includes("multipart/form-data")) {
+      const formData = await req.formData();
+      for (const [key, value] of formData.entries()) {
+        if (key !== "customImage") {
+          body[key] = value;
+        }
+      }
+      const file = formData.get("customImage");
+      if (file && typeof file.arrayBuffer === "function" && file.size > 0) {
+        const { saveUploadedFile } = await import("@/lib/upload-file");
+        body.assetImageUrl = await saveUploadedFile(file, "manual-celebrations");
+      }
+    } else {
+      body = await req.json();
+    }
 
     // If request is to send a celebration email now
     if (body.action === "sendNow") {
