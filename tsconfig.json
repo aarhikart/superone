@@ -29,6 +29,6 @@
     ".next/types/**/*.ts",
     ".next/dev/types/**/*.ts",
     "**/*.mts"
-  ],
+, "app/_components/landing/contact-form.jsx", "app/api/contact/route.js", "app/api/contact/route.js"  ],
   "exclude": ["node_modules"]
 }
