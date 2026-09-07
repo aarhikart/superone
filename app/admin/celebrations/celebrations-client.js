@@ -567,13 +567,13 @@ export default function CelebrationsClient({ currentUser }) {
                       className="group relative rounded-3xl border border-slate-100 bg-white overflow-hidden shadow-xs hover:shadow-md transition flex flex-col justify-between"
                     >
                       {/* Top Large Email Celebration Banner Image */}
-                      <div className="relative h-44 w-full bg-slate-100 overflow-hidden">
-                        {/* eslint-disable-next-line @next/next/no-img-element */}
-                        <img
-                          src={emailImage}
-                          alt="Celebration Email Banner"
-                          className="h-full w-full object-cover object-center transition duration-300 group-hover:scale-102"
-                        />
+                        <div className="relative h-44 w-full bg-slate-100 overflow-hidden">
+                          {/* eslint-disable-next-line @next/next/no-img-element */}
+                          <img
+                            src={emailImage}
+                            alt="Celebration Email Banner"
+                            className="h-full w-full object-cover object-center transition duration-300 group-hover:scale-102"
+                          />
 
                         {/* Edit Email Image Button on Banner */}
                         <button

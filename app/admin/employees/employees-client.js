@@ -20,9 +20,11 @@ import {
   Heart,
   Upload,
   Camera,
+  FileSpreadsheet
 } from "lucide-react";
 import * as XLSX from "xlsx";
 import Swal from "sweetalert2";
+import BulkImportModal from "./_components/BulkImportModal";
 
 const DEPARTMENTS = [
   "Engineering",
@@ -109,6 +111,7 @@ export default function EmployeesClient({ currentUser }) {
   const [avatarPreview, setAvatarPreview] = useState("");
   const [formError, setFormError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isBulkImportOpen, setIsBulkImportOpen] = useState(false);
   const fileInputRef = useRef(null);
 
   const fetchEmployees = useCallback(async () => {
@@ -456,14 +459,24 @@ export default function EmployeesClient({ currentUser }) {
             <span>Export</span>
           </button>
 
-          <button
-            type="button"
-            onClick={handleOpenAddDrawer}
-            className="flex items-center gap-2 rounded-full bg-[#4318FF] px-6 py-2.5 text-sm font-semibold text-white shadow-md shadow-indigo-500/20 transition hover:bg-[#3713d9] active:scale-95"
-          >
-            <Plus className="h-4 w-4" />
-            <span>Add Employee</span>
-          </button>
+          <div className="flex flex-col sm:flex-row gap-3">
+            <button
+              type="button"
+              onClick={() => setIsBulkImportOpen(true)}
+              className="flex items-center justify-center gap-2 rounded-full border border-slate-200 bg-white px-6 py-2.5 text-sm font-semibold text-slate-700 shadow-sm hover:bg-slate-50 transition active:scale-95"
+            >
+              <FileSpreadsheet className="h-4 w-4" />
+              <span>Import Data</span>
+            </button>
+            <button
+              type="button"
+              onClick={handleOpenAddDrawer}
+              className="flex items-center justify-center gap-2 rounded-full bg-[#4318FF] px-6 py-2.5 text-sm font-semibold text-white shadow-md shadow-indigo-500/20 transition hover:bg-[#3713d9] active:scale-95"
+            >
+              <Plus className="h-4 w-4" />
+              <span>Add Employee</span>
+            </button>
+          </div>
         </div>
       </div>
 
@@ -1237,6 +1250,15 @@ export default function EmployeesClient({ currentUser }) {
           </div>
         </div>
       )}
+
+      {/* Bulk Import Modal */}
+      <BulkImportModal
+        isOpen={isBulkImportOpen}
+        onClose={() => setIsBulkImportOpen(false)}
+        onImportSuccess={() => {
+          fetchEmployees();
+        }}
+      />
     </div>
   );
 }

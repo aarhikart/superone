@@ -88,6 +88,54 @@ function parseEmailString(str = "") {
     .filter((e) => Boolean(e) && e.includes("@"));
 }
 
+function CustomTimePicker({ value, onChange }) {
+  const parts = value.match(/(\d{2}):(\d{2})\s*(AM|PM)?/i) || [, "09", "00", "AM"];
+  const h = parts[1];
+  const m = parts[2];
+  const p = (parts[3] || "AM").toUpperCase();
+
+  return (
+    <div className="flex items-center gap-1.5 w-full bg-slate-50 border border-slate-200 rounded-xl p-1.5 focus-within:border-[#4318FF] transition shadow-2xs">
+      <select
+        value={h}
+        onChange={(e) => onChange(`${e.target.value}:${m} ${p}`)}
+        className="appearance-none bg-transparent font-mono font-bold text-slate-800 text-sm py-1.5 px-2 outline-none cursor-pointer hover:bg-slate-200 rounded-lg"
+      >
+        {Array.from({ length: 12 }).map((_, i) => (
+          <option key={i} value={String(i + 1).padStart(2, "0")}>{String(i + 1).padStart(2, "0")}</option>
+        ))}
+      </select>
+      <span className="font-bold text-slate-400">:</span>
+      <select
+        value={m}
+        onChange={(e) => onChange(`${h}:${e.target.value} ${p}`)}
+        className="appearance-none bg-transparent font-mono font-bold text-slate-800 text-sm py-1.5 px-2 outline-none cursor-pointer hover:bg-slate-200 rounded-lg"
+      >
+        {Array.from({ length: 60 }).map((_, i) => (
+          <option key={i} value={String(i).padStart(2, "0")}>{String(i).padStart(2, "0")}</option>
+        ))}
+      </select>
+      <div className="flex-1"></div>
+      <div className="flex items-center bg-slate-200/50 rounded-lg p-0.5">
+        <button
+          type="button"
+          onClick={() => onChange(`${h}:${m} AM`)}
+          className={`px-2 py-1 text-[11px] font-bold rounded-md transition ${p === "AM" ? "bg-white text-[#4318FF] shadow-sm" : "text-slate-500 hover:text-slate-700"}`}
+        >
+          AM
+        </button>
+        <button
+          type="button"
+          onClick={() => onChange(`${h}:${m} PM`)}
+          className={`px-2 py-1 text-[11px] font-bold rounded-md transition ${p === "PM" ? "bg-white text-[#4318FF] shadow-sm" : "text-slate-500 hover:text-slate-700"}`}
+        >
+          PM
+        </button>
+      </div>
+    </div>
+  );
+}
+
 export default function CelebrationSettingsModal({
   isOpen,
   onClose,
@@ -348,107 +396,65 @@ export default function CelebrationSettingsModal({
                   </span>
                 </div>
 
+                <div className="mt-5 flex flex-col sm:flex-row sm:items-center gap-4 p-4 rounded-xl border border-indigo-100 bg-indigo-50/50">
+                  <div className="flex-1">
+                    <p className="text-sm font-bold text-slate-800">Set Common Time For All</p>
+                    <p className="text-[11px] text-slate-500">Updates all three milestone types at once.</p>
+                  </div>
+                  <div className="w-full sm:w-64">
+                    <CustomTimePicker
+                      value={settings.birthdayScheduleTime || "09:00 AM"}
+                      onChange={(val) => setSettings(p => ({
+                        ...p,
+                        birthdayScheduleTime: val,
+                        workAnniversaryScheduleTime: val,
+                        personalAnniversaryScheduleTime: val
+                      }))}
+                    />
+                  </div>
+                </div>
+
                 <div className="mt-6 grid grid-cols-1 sm:grid-cols-3 gap-5">
                   {/* Birthdays Time Selector */}
                   <div className="rounded-2xl bg-white p-4.5 border border-slate-200 shadow-2xs hover:border-[#4318FF]/40 transition">
-                    <div className="flex items-center justify-between mb-2">
+                    <div className="flex items-center justify-between mb-4">
                       <label className="text-xs font-bold text-slate-800 flex items-center gap-2">
                         <Cake className="h-4 w-4 text-pink-500" />
                         <span>🎂 Birthdays</span>
                       </label>
-                      <span className="inline-flex items-center gap-1 text-[11px] font-bold text-[#4318FF] bg-indigo-50 px-2 py-0.5 rounded-full font-mono">
-                        {settings.birthdayScheduleTime || "09:00 AM"}
-                      </span>
                     </div>
-                    <p className="text-[11px] text-slate-400 mb-2.5">
-                      Pick exact hour and single minute
-                    </p>
-                    <div className="relative">
-                      <input
-                        type="time"
-                        step="60"
-                        value={timeStringTo24Hour(settings.birthdayScheduleTime || "09:00 AM")}
-                        onChange={(e) => {
-                          const val = e.target.value;
-                          if (val) {
-                            const t12 = time24To12Hour(val);
-                            setSettings((p) => ({
-                              ...p,
-                              birthdayScheduleTime: t12,
-                            }));
-                          }
-                        }}
-                        className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3.5 py-2.5 text-sm font-bold font-mono text-slate-800 focus:border-[#4318FF] focus:bg-white focus:outline-none transition cursor-pointer shadow-2xs"
-                      />
-                    </div>
+                    <CustomTimePicker
+                      value={settings.birthdayScheduleTime || "09:00 AM"}
+                      onChange={(val) => setSettings((p) => ({ ...p, birthdayScheduleTime: val }))}
+                    />
                   </div>
 
                   {/* Work Anniversaries Time Selector */}
                   <div className="rounded-2xl bg-white p-4.5 border border-slate-200 shadow-2xs hover:border-[#4318FF]/40 transition">
-                    <div className="flex items-center justify-between mb-2">
+                    <div className="flex items-center justify-between mb-4">
                       <label className="text-xs font-bold text-slate-800 flex items-center gap-2">
                         <Award className="h-4 w-4 text-indigo-600" />
                         <span>🏆 Work Anniversaries</span>
                       </label>
-                      <span className="inline-flex items-center gap-1 text-[11px] font-bold text-[#4318FF] bg-indigo-50 px-2 py-0.5 rounded-full font-mono">
-                        {settings.workAnniversaryScheduleTime || "09:00 AM"}
-                      </span>
                     </div>
-                    <p className="text-[11px] text-slate-400 mb-2.5">
-                      Pick exact hour and single minute
-                    </p>
-                    <div className="relative">
-                      <input
-                        type="time"
-                        step="60"
-                        value={timeStringTo24Hour(settings.workAnniversaryScheduleTime || "09:00 AM")}
-                        onChange={(e) => {
-                          const val = e.target.value;
-                          if (val) {
-                            const t12 = time24To12Hour(val);
-                            setSettings((p) => ({
-                              ...p,
-                              workAnniversaryScheduleTime: t12,
-                            }));
-                          }
-                        }}
-                        className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3.5 py-2.5 text-sm font-bold font-mono text-slate-800 focus:border-[#4318FF] focus:bg-white focus:outline-none transition cursor-pointer shadow-2xs"
-                      />
-                    </div>
+                    <CustomTimePicker
+                      value={settings.workAnniversaryScheduleTime || "09:00 AM"}
+                      onChange={(val) => setSettings((p) => ({ ...p, workAnniversaryScheduleTime: val }))}
+                    />
                   </div>
 
                   {/* Personal Milestones Time Selector */}
                   <div className="rounded-2xl bg-white p-4.5 border border-slate-200 shadow-2xs hover:border-[#4318FF]/40 transition">
-                    <div className="flex items-center justify-between mb-2">
+                    <div className="flex items-center justify-between mb-4">
                       <label className="text-xs font-bold text-slate-800 flex items-center gap-2">
                         <Heart className="h-4 w-4 text-rose-500" />
                         <span>💐 Personal Milestones</span>
                       </label>
-                      <span className="inline-flex items-center gap-1 text-[11px] font-bold text-[#4318FF] bg-indigo-50 px-2 py-0.5 rounded-full font-mono">
-                        {settings.personalAnniversaryScheduleTime || "10:00 AM"}
-                      </span>
                     </div>
-                    <p className="text-[11px] text-slate-400 mb-2.5">
-                      Pick exact hour and single minute
-                    </p>
-                    <div className="relative">
-                      <input
-                        type="time"
-                        step="60"
-                        value={timeStringTo24Hour(settings.personalAnniversaryScheduleTime || "10:00 AM")}
-                        onChange={(e) => {
-                          const val = e.target.value;
-                          if (val) {
-                            const t12 = time24To12Hour(val);
-                            setSettings((p) => ({
-                              ...p,
-                              personalAnniversaryScheduleTime: t12,
-                            }));
-                          }
-                        }}
-                        className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3.5 py-2.5 text-sm font-bold font-mono text-slate-800 focus:border-[#4318FF] focus:bg-white focus:outline-none transition cursor-pointer shadow-2xs"
-                      />
-                    </div>
+                    <CustomTimePicker
+                      value={settings.personalAnniversaryScheduleTime || "10:00 AM"}
+                      onChange={(val) => setSettings((p) => ({ ...p, personalAnniversaryScheduleTime: val }))}
+                    />
                   </div>
                 </div>
 

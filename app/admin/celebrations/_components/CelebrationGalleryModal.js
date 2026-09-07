@@ -285,6 +285,7 @@ export default function CelebrationGalleryModal({
               onClick={() => {
                 setSelectedFiles([]);
                 setUploadError("");
+                setUploadCategory(activeTab === "All Assets" ? "Birthdays" : activeTab);
                 setIsUploadOpen(true);
               }}
               className="flex items-center gap-2 rounded-full bg-[#4318FF] px-5 py-2 text-xs font-semibold text-white shadow-sm hover:bg-[#3713d9] transition"
