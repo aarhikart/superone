@@ -86,7 +86,7 @@ export default function DeliveryLogsModal({ isOpen, onClose }) {
         icon: "success",
         title: "Retry Dispatched!",
         text: "The celebration email has been re-sent.",
-        confirmButtonColor: "#4318FF",
+        confirmButtonColor: "#00AEEF",
         background: "#ffffff",
         color: "#0f172a",
         customClass: {
@@ -100,7 +100,7 @@ export default function DeliveryLogsModal({ isOpen, onClose }) {
         icon: "error",
         title: "Retry Failed",
         text: err.message || "Failed to resend email.",
-        confirmButtonColor: "#4318FF",
+        confirmButtonColor: "#00AEEF",
       });
     } finally {
       setRetryingId(null);
@@ -140,7 +140,7 @@ export default function DeliveryLogsModal({ isOpen, onClose }) {
                   setPage(1);
                 }}
                 placeholder="Search recipient or subject..."
-                className="w-48 sm:w-56 rounded-full bg-slate-50 pl-8 pr-3 py-1.5 text-xs text-slate-900 placeholder:text-slate-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#4318FF]/20 border border-slate-200"
+                className="w-48 sm:w-56 rounded-full bg-slate-50 pl-8 pr-3 py-1.5 text-xs text-slate-900 placeholder:text-slate-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#00AEEF]/20 border border-slate-200"
               />
             </div>
 
@@ -172,7 +172,7 @@ export default function DeliveryLogsModal({ isOpen, onClose }) {
         <div className="flex-1 overflow-y-auto p-6">
           {loading ? (
             <div className="py-20 text-center">
-              <Loader2 className="mx-auto h-8 w-8 animate-spin text-[#4318FF]" />
+              <Loader2 className="mx-auto h-8 w-8 animate-spin text-[#00AEEF]" />
               <p className="mt-3 text-xs text-slate-500">Loading delivery logs...</p>
             </div>
           ) : logs.length === 0 ? (
@@ -210,7 +210,7 @@ export default function DeliveryLogsModal({ isOpen, onClose }) {
                             {log.employeeName}
                           </p>
                           <div className="mt-1 flex items-center gap-1.5">
-                            <span className="text-[10px] font-bold text-[#4318FF] bg-indigo-50 px-1.5 py-0.5 rounded-sm">
+                            <span className="text-[10px] font-bold text-[#00AEEF] bg-indigo-50 px-1.5 py-0.5 rounded-sm">
                               TO
                             </span>
                             <span className="text-[11px] text-slate-600 font-mono">

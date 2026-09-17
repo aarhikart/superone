@@ -26,6 +26,7 @@ import {
   Headphones,
   Code2,
   Camera,
+  Trash2,
 } from "lucide-react";
 import Swal from "sweetalert2";
 import CelebrationGalleryModal from "./_components/CelebrationGalleryModal";
@@ -67,10 +68,10 @@ export default function CelebrationsClient({ currentUser }) {
   const [data, setData] = useState({
     celebrations: [],
     stats: {
-      upcomingThisMonth: 18,
-      birthdayCount: 9,
-      workAnniversaryCount: 6,
-      personalAnniversaryCount: 3,
+      upcomingThisMonth: 0,
+      birthdayCount: 0,
+      workAnniversaryCount: 0,
+      personalAnniversaryCount: 0,
     },
     settings: {
       birthdayScheduleTime: "09:00 AM",
@@ -253,7 +254,7 @@ export default function CelebrationsClient({ currentUser }) {
       text: `Send celebration greeting now to ${item.employeeName} (${item.email})?`,
       icon: "question",
       showCancelButton: true,
-      confirmButtonColor: "#4318FF",
+      confirmButtonColor: "#00AEEF",
       cancelButtonColor: "#64748b",
       confirmButtonText: "Yes, Send Now",
       cancelButtonText: "Cancel",
@@ -300,7 +301,7 @@ export default function CelebrationsClient({ currentUser }) {
           icon: "success",
           title: "Celebration Email Sent!",
           text: `Greeting successfully delivered to ${item.employeeName}.`,
-          confirmButtonColor: "#4318FF",
+          confirmButtonColor: "#00AEEF",
           background: "#ffffff",
           color: "#0f172a",
           customClass: {
@@ -313,8 +314,74 @@ export default function CelebrationsClient({ currentUser }) {
         Swal.fire({
           icon: "error",
           title: "Send Failed",
-          text: err.message || "Failed to deliver celebration email.",
-          confirmButtonColor: "#4318FF",
+          text: err.message || "We encountered an issue while trying to send the email. Please try again later.",
+          confirmButtonColor: "#00AEEF",
+        });
+      }
+    }
+  };
+
+  const handleDeleteManualCelebration = async (item) => {
+    const manualId = item.manualId || (item.id && item.id.replace("manual_", ""));
+    if (!manualId) return;
+
+    const result = await Swal.fire({
+      title: "Delete Manual Celebration?",
+      text: `Are you sure you want to delete the celebration for "${item.employeeName}" (${item.title})? This action cannot be undone.`,
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#ef4444",
+      cancelButtonColor: "#64748b",
+      confirmButtonText: "Yes, delete",
+      cancelButtonText: "Cancel",
+      background: "#ffffff",
+      color: "#0f172a",
+      customClass: {
+        popup: "rounded-3xl shadow-2xl border border-slate-100",
+        confirmButton: "px-5 py-2.5 rounded-xl font-medium",
+        cancelButton: "px-5 py-2.5 rounded-xl font-medium",
+      },
+    });
+
+    if (result.isConfirmed) {
+      Swal.fire({
+        title: "Deleting...",
+        text: "Please wait while the celebration is removed.",
+        allowOutsideClick: false,
+        didOpen: () => {
+          Swal.showLoading();
+        },
+      });
+
+      try {
+        const res = await fetch(`/api/celebrations?id=${manualId}`, {
+          method: "DELETE",
+        });
+
+        const data = await res.json();
+        if (!res.ok) {
+          throw new Error(data.error || "Unable to delete manual celebration. Please try again.");
+        }
+
+        await Swal.fire({
+          icon: "success",
+          title: "Deleted!",
+          text: "Manual celebration removed successfully.",
+          confirmButtonColor: "#00AEEF",
+          background: "#ffffff",
+          color: "#0f172a",
+          customClass: {
+            popup: "rounded-3xl shadow-2xl border border-slate-100",
+          },
+        });
+
+        fetchCelebrations();
+      } catch (err) {
+        Swal.fire({
+          icon: "error",
+          title: "Delete Failed",
+          text: err.message || "An unexpected error occurred. Please try again later.",
+          confirmButtonColor: "#00AEEF",
         });
       }
     }
@@ -338,7 +405,7 @@ export default function CelebrationsClient({ currentUser }) {
         icon: "success",
         title: "Automation Check Complete!",
         text: `Checked ${resData.summary?.totalChecked || 0} milestone(s). Dispatched ${resData.summary?.sent || 0} email(s) today.`,
-        confirmButtonColor: "#4318FF",
+        confirmButtonColor: "#00AEEF",
         background: "#ffffff",
         color: "#0f172a",
         customClass: {
@@ -351,8 +418,8 @@ export default function CelebrationsClient({ currentUser }) {
       Swal.fire({
         icon: "error",
         title: "Automation Error",
-        text: err.message || "Could not complete automation run.",
-        confirmButtonColor: "#4318FF",
+        text: err.message || "The automated process could not be completed at this time. Please try again later.",
+        confirmButtonColor: "#00AEEF",
       });
     } finally {
       setIsAutomating(false);
@@ -416,7 +483,7 @@ export default function CelebrationsClient({ currentUser }) {
           <button
             type="button"
             onClick={() => setIsManualOpen(true)}
-            className="flex items-center gap-2 rounded-full bg-[#4318FF] px-6 py-2.5 text-xs font-bold text-white shadow-md shadow-indigo-500/20 hover:bg-[#3713d9] transition active:scale-95"
+            className="flex items-center gap-2 rounded-full bg-[#00AEEF] px-6 py-2.5 text-xs font-bold text-white shadow-md shadow-indigo-500/20 hover:bg-[#0090c5] transition active:scale-95"
           >
             <Plus className="h-4 w-4" />
             <span>New Celebration</span>
@@ -436,9 +503,13 @@ export default function CelebrationsClient({ currentUser }) {
               <Calendar className="h-4 w-4" />
             </div>
           </div>
-          <p className="mt-3 text-3xl font-extrabold tracking-tight text-slate-900">
-            {data.stats?.upcomingThisMonth || 18}
-          </p>
+          {loading ? (
+            <div className="mt-4 h-10 w-20 rounded bg-slate-200 animate-pulse"></div>
+          ) : (
+            <p className="mt-3 text-3xl font-extrabold tracking-tight text-slate-900">
+              {data.stats?.upcomingThisMonth ?? 0}
+            </p>
+          )}
         </div>
 
         {/* Card 2: Birthdays */}
@@ -451,9 +522,13 @@ export default function CelebrationsClient({ currentUser }) {
               <Cake className="h-4 w-4" />
             </div>
           </div>
-          <p className="mt-3 text-3xl font-extrabold tracking-tight text-slate-900">
-            {data.stats?.birthdayCount || 9}
-          </p>
+          {loading ? (
+            <div className="mt-4 h-10 w-20 rounded bg-slate-200 animate-pulse"></div>
+          ) : (
+            <p className="mt-3 text-3xl font-extrabold tracking-tight text-slate-900">
+              {data.stats?.birthdayCount ?? 0}
+            </p>
+          )}
         </div>
 
         {/* Card 3: Work Anniversaries */}
@@ -462,13 +537,17 @@ export default function CelebrationsClient({ currentUser }) {
             <span className="text-[11px] font-bold uppercase tracking-wider text-slate-500">
               WORK ANNIVERSARIES
             </span>
-            <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-indigo-50 text-[#4318FF]">
+            <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-indigo-50 text-[#00AEEF]">
               <Award className="h-4 w-4" />
             </div>
           </div>
-          <p className="mt-3 text-3xl font-extrabold tracking-tight text-slate-900">
-            {data.stats?.workAnniversaryCount || 6}
-          </p>
+          {loading ? (
+            <div className="mt-4 h-10 w-20 rounded bg-slate-200 animate-pulse"></div>
+          ) : (
+            <p className="mt-3 text-3xl font-extrabold tracking-tight text-slate-900">
+              {data.stats?.workAnniversaryCount ?? 0}
+            </p>
+          )}
         </div>
 
         {/* Card 4: Personal Anniversaries */}
@@ -481,9 +560,13 @@ export default function CelebrationsClient({ currentUser }) {
               <Heart className="h-4 w-4" />
             </div>
           </div>
-          <p className="mt-3 text-3xl font-extrabold tracking-tight text-slate-900">
-            {data.stats?.personalAnniversaryCount || 3}
-          </p>
+          {loading ? (
+            <div className="mt-4 h-10 w-20 rounded bg-slate-200 animate-pulse"></div>
+          ) : (
+            <p className="mt-3 text-3xl font-extrabold tracking-tight text-slate-900">
+              {data.stats?.personalAnniversaryCount ?? 0}
+            </p>
+          )}
         </div>
       </div>
 
@@ -551,7 +634,7 @@ export default function CelebrationsClient({ currentUser }) {
           {/* Cards Grid */}
           {loading ? (
             <div className="py-20 text-center rounded-3xl border border-slate-100 bg-white">
-              <Loader2 className="mx-auto h-8 w-8 animate-spin text-[#4318FF]" />
+              <Loader2 className="mx-auto h-8 w-8 animate-spin text-[#00AEEF]" />
               <p className="mt-3 text-xs text-slate-500">Loading upcoming celebrations...</p>
             </div>
           ) : (
@@ -586,12 +669,19 @@ export default function CelebrationsClient({ currentUser }) {
                           <span>Edit Email Image</span>
                         </button>
 
-                        {/* Milestone Day Badge (Top Right) */}
-                        <span
-                          className={`absolute top-3 right-3 rounded-full px-3 py-1 text-[10px] font-bold shadow-sm backdrop-blur-xs ${item.badgeColor}`}
-                        >
-                          {item.badgeLabel}
-                        </span>
+                        {/* Milestone Day Badge & Manual Tag (Top Right) */}
+                        <div className="absolute top-3 right-3 flex items-center gap-1.5">
+                          {item.isManual && (
+                            <span className="rounded-full bg-amber-500/90 text-white px-2.5 py-0.5 text-[10px] font-bold shadow-sm backdrop-blur-xs">
+                              Manual
+                            </span>
+                          )}
+                          <span
+                            className={`rounded-full px-3 py-1 text-[10px] font-bold shadow-sm backdrop-blur-xs ${item.badgeColor}`}
+                          >
+                            {item.badgeLabel}
+                          </span>
+                        </div>
 
                         {/* Small Circle Employee Profile Photo Overlay (Bottom Left) */}
                         <div className="absolute -bottom-4 left-5">
@@ -637,11 +727,21 @@ export default function CelebrationsClient({ currentUser }) {
                           <button
                             type="button"
                             onClick={() => handleSendCelebrationNow(item)}
-                            className="flex-1 flex items-center justify-center gap-1.5 rounded-xl border border-indigo-100 bg-indigo-50/70 py-2.5 text-xs font-bold text-[#4318FF] hover:bg-indigo-100/80 transition"
+                            className="flex-1 flex items-center justify-center gap-1.5 rounded-xl border border-indigo-100 bg-indigo-50/70 py-2.5 text-xs font-bold text-[#00AEEF] hover:bg-indigo-100/80 transition"
                           >
                             <Send className="h-3.5 w-3.5" />
                             <span>Send Email Now</span>
                           </button>
+                          {item.isManual && (
+                            <button
+                              type="button"
+                              onClick={() => handleDeleteManualCelebration(item)}
+                              title="Delete Manual Celebration"
+                              className="flex items-center justify-center rounded-xl border border-rose-200 bg-rose-50 p-2.5 text-rose-600 hover:bg-rose-100 hover:text-rose-700 transition"
+                            >
+                              <Trash2 className="h-3.5 w-3.5" />
+                            </button>
+                          )}
                         </div>
                       </div>
                     </div>
@@ -653,7 +753,7 @@ export default function CelebrationsClient({ currentUser }) {
                   onClick={() => setIsManualOpen(true)}
                   className="rounded-3xl border-2 border-dashed border-indigo-200 bg-indigo-50/20 p-8 flex flex-col items-center justify-center text-center cursor-pointer hover:bg-indigo-50/40 transition min-h-[300px]"
                 >
-                  <div className="flex h-12 w-12 items-center justify-center rounded-full bg-indigo-100 text-[#4318FF] mb-3 shadow-xs">
+                  <div className="flex h-12 w-12 items-center justify-center rounded-full bg-indigo-100 text-[#00AEEF] mb-3 shadow-xs">
                     <Plus className="h-6 w-6" />
                   </div>
                   <h3 className="text-base font-bold text-slate-900">
@@ -687,104 +787,85 @@ export default function CelebrationsClient({ currentUser }) {
           {/* Global Schedule Card */}
           <div className="rounded-3xl border border-slate-100 bg-white p-6 shadow-xs space-y-4">
             <div className="flex items-center gap-2">
-              <Clock className="h-5 w-5 text-[#4318FF]" />
+              <Clock className="h-5 w-5 text-[#00AEEF]" />
               <h3 className="text-base font-bold text-slate-900">
                 Global Schedule
               </h3>
             </div>
             <p className="text-xs text-slate-500">
-              Automated celebration emails are sent daily at these configured times in Indian Standard Time.
+              Automated celebration emails are sent daily at these configured times.
             </p>
 
-            <div className="space-y-2.5 pt-2">
-              {/* Birthdays schedule */}
-              <div className="flex items-center justify-between rounded-2xl bg-slate-50 p-3.5 border border-slate-100">
-                <div className="flex items-center gap-2.5">
-                  <Cake className="h-4 w-4 text-pink-500" />
-                  <span className="text-xs font-bold text-slate-800">
-                    Birthdays
-                  </span>
-                </div>
-                <button
-                  type="button"
-                  onClick={() => setIsSettingsOpen(true)}
-                  className="flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-2.5 py-1 text-xs font-mono font-bold text-slate-700 hover:bg-slate-50 shadow-2xs"
-                >
-                  <span>{data.settings?.birthdayScheduleTime || "09:00 AM"}</span>
-                  <Pencil className="h-3 w-3 text-slate-400" />
-                </button>
+            {loading ? (
+              <div className="space-y-2.5 pt-2">
+                <div className="h-12 w-full rounded-2xl bg-slate-100 animate-pulse" />
+                <div className="h-12 w-full rounded-2xl bg-slate-100 animate-pulse" />
+                <div className="h-12 w-full rounded-2xl bg-slate-100 animate-pulse" />
               </div>
-
-              {/* Work Anniversaries schedule */}
-              <div className="flex items-center justify-between rounded-2xl bg-slate-50 p-3.5 border border-slate-100">
-                <div className="flex items-center gap-2.5">
-                  <Award className="h-4 w-4 text-indigo-600" />
-                  <span className="text-xs font-bold text-slate-800">
-                    Work Anniversaries
-                  </span>
+            ) : (
+              <div className="space-y-2.5 pt-2">
+                {/* Birthdays schedule */}
+                <div className="flex items-center justify-between rounded-2xl bg-slate-50 p-3.5 border border-slate-100">
+                  <div className="flex items-center gap-2.5">
+                    <Cake className="h-4 w-4 text-pink-500" />
+                    <span className="text-xs font-bold text-slate-800">
+                      Birthdays
+                    </span>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setIsSettingsOpen(true)}
+                    className="flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-2.5 py-1 text-xs font-mono font-bold text-slate-700 hover:bg-slate-50 shadow-2xs"
+                  >
+                    <span>{data.settings?.birthdayScheduleTime || "09:00 AM"}</span>
+                    <Pencil className="h-3 w-3 text-slate-400" />
+                  </button>
                 </div>
-                <button
-                  type="button"
-                  onClick={() => setIsSettingsOpen(true)}
-                  className="flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-2.5 py-1 text-xs font-mono font-bold text-slate-700 hover:bg-slate-50 shadow-2xs"
-                >
-                  <span>{data.settings?.workAnniversaryScheduleTime || "09:00 AM"}</span>
-                  <Pencil className="h-3 w-3 text-slate-400" />
-                </button>
-              </div>
 
-              {/* Personal Milestones schedule */}
-              <div className="flex items-center justify-between rounded-2xl bg-slate-50 p-3.5 border border-slate-100">
-                <div className="flex items-center gap-2.5">
-                  <Heart className="h-4 w-4 text-rose-500" />
-                  <span className="text-xs font-bold text-slate-800">
-                    Personal Milestones
-                  </span>
+                {/* Work Anniversaries schedule */}
+                <div className="flex items-center justify-between rounded-2xl bg-slate-50 p-3.5 border border-slate-100">
+                  <div className="flex items-center gap-2.5">
+                    <Award className="h-4 w-4 text-indigo-600" />
+                    <span className="text-xs font-bold text-slate-800">
+                      Work Anniversaries
+                    </span>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setIsSettingsOpen(true)}
+                    className="flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-2.5 py-1 text-xs font-mono font-bold text-slate-700 hover:bg-slate-50 shadow-2xs"
+                  >
+                    <span>{data.settings?.workAnniversaryScheduleTime || "09:00 AM"}</span>
+                    <Pencil className="h-3 w-3 text-slate-400" />
+                  </button>
                 </div>
-                <button
-                  type="button"
-                  onClick={() => setIsSettingsOpen(true)}
-                  className="flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-2.5 py-1 text-xs font-mono font-bold text-slate-700 hover:bg-slate-50 shadow-2xs"
-                >
-                  <span>{data.settings?.personalAnniversaryScheduleTime || "10:00 AM"}</span>
-                  <Pencil className="h-3 w-3 text-slate-400" />
-                </button>
+
+                {/* Personal Milestones schedule */}
+                <div className="flex items-center justify-between rounded-2xl bg-slate-50 p-3.5 border border-slate-100">
+                  <div className="flex items-center gap-2.5">
+                    <Heart className="h-4 w-4 text-rose-500" />
+                    <span className="text-xs font-bold text-slate-800">
+                      Personal Milestones
+                    </span>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setIsSettingsOpen(true)}
+                    className="flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-2.5 py-1 text-xs font-mono font-bold text-slate-700 hover:bg-slate-50 shadow-2xs"
+                  >
+                    <span>{data.settings?.personalAnniversaryScheduleTime || "10:00 AM"}</span>
+                    <Pencil className="h-3 w-3 text-slate-400" />
+                  </button>
+                </div>
               </div>
-            </div>
-
-            <div className="flex items-center justify-between text-[11px] text-slate-400 font-semibold pt-2 border-t border-slate-100">
-              <span>Timezone</span>
-              <span className="text-slate-800 font-mono font-bold">
-                {data.settings?.timezone || "Asia/Kolkata (IST)"}
-              </span>
-            </div>
-
-            {/* Run Automation Now button */}
-            <button
-              type="button"
-              onClick={handleRunAutomation}
-              disabled={isAutomating}
-              className="w-full flex items-center justify-center gap-2 rounded-xl bg-slate-900 py-2.5 text-xs font-bold text-white hover:bg-slate-800 transition shadow-xs disabled:opacity-50"
-            >
-              {isAutomating ? (
-                <>
-                  <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                  <span>Checking Schedules...</span>
-                </>
-              ) : (
-                <>
-                  <Sparkles className="h-3.5 w-3.5 text-cyan-300" />
-                  <span>Check & Run Automation Now</span>
-                </>
-              )}
-            </button>
+            )}
           </div>
 
           {/* Delivery Log Card */}
           <div className="rounded-3xl border border-slate-100 bg-white p-6 shadow-xs space-y-4">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <RotateCw className="h-4 w-4 text-[#4318FF]" />
+                <RotateCw className="h-4 w-4 text-[#00AEEF]" />
                 <h3 className="text-base font-bold text-slate-900">
                   Delivery Log
                 </h3>
@@ -792,85 +873,73 @@ export default function CelebrationsClient({ currentUser }) {
               <button
                 type="button"
                 onClick={() => setIsLogsOpen(true)}
-                className="text-xs font-bold text-[#4318FF] hover:underline"
+                className="text-xs font-bold text-[#00AEEF] hover:underline"
               >
                 View All
               </button>
             </div>
 
             {/* Recent Log Items */}
-            <div className="space-y-3">
-              {(data.recentLogs && data.recentLogs.length > 0
-                ? data.recentLogs.slice(0, 4)
-                : [
-                    {
-                      _id: "1",
-                      employeeName: "Alex Chen",
-                      celebrationType: "Birthday Message",
-                      sentAt: new Date(),
-                      status: "SENT",
-                    },
-                    {
-                      _id: "2",
-                      employeeName: "Maria Garcia",
-                      celebrationType: "2 Yr Anniversary",
-                      sentAt: new Date(Date.now() - 86400000),
-                      status: "SENT",
-                    },
-                    {
-                      _id: "3",
-                      employeeName: "James Wilson",
-                      celebrationType: "Birthday Message",
-                      sentAt: new Date(Date.now() - 172800000),
-                      status: "FAILED",
-                    },
-                  ]
-              ).map((log) => {
-                const isSent = log.status === "SENT";
-                return (
-                  <div
-                    key={log._id}
-                    className="flex items-center justify-between rounded-2xl border border-slate-100 bg-slate-50/70 p-3.5"
-                  >
-                    <div className="flex items-start gap-2.5">
-                      {isSent ? (
-                        <CheckCircle2 className="h-4 w-4 text-emerald-500 mt-0.5" />
-                      ) : (
-                        <AlertCircle className="h-4 w-4 text-rose-500 mt-0.5" />
-                      )}
-                      <div>
-                        <p className="text-xs font-bold text-slate-900">
-                          {log.employeeName}
-                        </p>
-                        <p className="text-[11px] text-slate-500">
-                          {log.celebrationType}
-                        </p>
-                        <p className="text-[10px] text-slate-400 mt-0.5">
-                          {formatRelativeTime(log.sentAt || log.createdAt)}
-                        </p>
-                      </div>
-                    </div>
-
-                    <span
-                      className={`rounded-full px-2.5 py-0.5 text-[10px] font-bold ${
-                        isSent
-                          ? "bg-emerald-100 text-emerald-700"
-                          : "bg-rose-100 text-rose-700"
-                      }`}
+            {loading ? (
+              <div className="space-y-3">
+                <div className="h-16 w-full rounded-2xl bg-slate-100 animate-pulse" />
+                <div className="h-16 w-full rounded-2xl bg-slate-100 animate-pulse" />
+                <div className="h-16 w-full rounded-2xl bg-slate-100 animate-pulse" />
+              </div>
+            ) : data.recentLogs && data.recentLogs.length > 0 ? (
+              <div className="space-y-3">
+                {data.recentLogs.slice(0, 4).map((log) => {
+                  const isSent = log.status === "SENT";
+                  return (
+                    <div
+                      key={log._id}
+                      className="flex items-center justify-between rounded-2xl border border-slate-100 bg-slate-50/70 p-3.5"
                     >
-                      {log.status}
-                    </span>
-                  </div>
-                );
-              })}
-            </div>
+                      <div className="flex items-start gap-2.5">
+                        {isSent ? (
+                          <CheckCircle2 className="h-4 w-4 text-emerald-500 mt-0.5" />
+                        ) : (
+                          <AlertCircle className="h-4 w-4 text-rose-500 mt-0.5" />
+                        )}
+                        <div>
+                          <p className="text-xs font-bold text-slate-900">
+                            {log.employeeName}
+                          </p>
+                          <p className="text-[11px] text-slate-500">
+                            {log.celebrationType}
+                          </p>
+                          <p className="text-[10px] text-slate-400 mt-0.5">
+                            {formatRelativeTime(log.sentAt || log.createdAt)}
+                          </p>
+                        </div>
+                      </div>
+
+                      <span
+                        className={`rounded-full px-2.5 py-0.5 text-[10px] font-bold ${
+                          isSent
+                            ? "bg-emerald-100 text-emerald-700"
+                            : "bg-rose-100 text-rose-700"
+                        }`}
+                      >
+                        {log.status}
+                      </span>
+                    </div>
+                  );
+                })}
+              </div>
+            ) : (
+              <div className="py-8 text-center rounded-2xl bg-slate-50 border border-dashed border-slate-200">
+                <p className="text-xs font-semibold text-slate-500">No delivery logs yet</p>
+                <p className="text-[11px] text-slate-400 mt-0.5">Automated or manual email dispatches will appear here</p>
+              </div>
+            )}
 
             {/* Bottom Link */}
             <div className="pt-2 text-center border-t border-slate-100">
               <button
                 type="button"
                 onClick={() => setIsLogsOpen(true)}
-                className="inline-flex items-center gap-1.5 text-xs font-bold text-slate-600 hover:text-[#4318FF] transition"
+                className="inline-flex items-center gap-1.5 text-xs font-bold text-slate-600 hover:text-[#00AEEF] transition"
               >
                 <Calendar className="h-3.5 w-3.5" />
                 <span>View Full Report</span>

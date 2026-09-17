@@ -140,3 +140,64 @@ export async function POST(req) {
     );
   }
 }
+
+export async function DELETE(req) {
+  const { error } = await requireApiRole([
+    ADMIN_ROLES.ADMIN,
+    ADMIN_ROLES.HR,
+  ]);
+
+  if (error) {
+    return error;
+  }
+
+  try {
+    await connectDB();
+    const { searchParams } = new URL(req.url);
+    let id = searchParams.get("id") || searchParams.get("manualId");
+
+    if (!id) {
+      try {
+        const body = await req.json();
+        id = body.id || body.manualId;
+      } catch {
+        // body not supplied
+      }
+    }
+
+    if (!id) {
+      return Response.json(
+        { error: "Celebration ID is required." },
+        { status: 400 }
+      );
+    }
+
+    const deleted = await ManualCelebration.findByIdAndDelete(id);
+    if (!deleted) {
+      return Response.json(
+        { error: "Manual celebration record not found." },
+        { status: 404 }
+      );
+    }
+
+    // Clean up uploaded file if any
+    if (deleted.assetImageUrl && deleted.assetImageUrl.startsWith("/")) {
+      try {
+        const { removeUploadedFile } = await import("@/lib/upload-file");
+        await removeUploadedFile(deleted.assetImageUrl);
+      } catch (e) {
+        console.error("Failed to delete celebration asset image:", e);
+      }
+    }
+
+    return Response.json({
+      message: "Manual celebration deleted successfully.",
+      id: deleted._id,
+    });
+  } catch (err) {
+    return Response.json(
+      { error: err.message || "Failed to delete manual celebration." },
+      { status: 500 }
+    );
+  }
+}

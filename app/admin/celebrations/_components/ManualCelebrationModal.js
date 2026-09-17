@@ -111,7 +111,7 @@ export default function ManualCelebrationModal({
         icon: "success",
         title: "Celebration Added!",
         text: "The custom celebration has been scheduled.",
-        confirmButtonColor: "#4318FF",
+        confirmButtonColor: "#00AEEF",
         background: "#ffffff",
         color: "#0f172a",
         customClass: {
@@ -138,7 +138,7 @@ export default function ManualCelebrationModal({
         {/* Header */}
         <div className="px-6 py-5 border-b border-slate-100 flex items-center justify-between">
           <div className="flex items-center gap-2.5">
-            <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-indigo-50 text-[#4318FF]">
+            <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-indigo-50 text-[#00AEEF]">
               <Sparkles className="h-4 w-4" />
             </div>
             <div>
@@ -176,14 +176,19 @@ export default function ManualCelebrationModal({
             <select
               value={selectedEmployeeId}
               onChange={(e) => handleEmployeeSelect(e.target.value)}
-              className="mt-1 w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-[#4318FF]/20"
+              className="mt-1 w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-[#00AEEF]/20"
             >
               <option value="">-- Choose Employee or Fill Manually --</option>
-              {employees.map((emp) => (
-                <option key={emp.id || emp._id} value={emp.id || emp._id}>
-                  {emp.name || `${emp.firstName} ${emp.lastName}`} ({emp.employeeId} - {emp.department})
-                </option>
-              ))}
+              {employees
+                .filter((emp) => {
+                  const s = (emp.status || "Active").trim().toLowerCase();
+                  return s !== "inactive" && s !== "deactivated";
+                })
+                .map((emp) => (
+                  <option key={emp.id || emp._id} value={emp.id || emp._id}>
+                    {emp.name || `${emp.firstName} ${emp.lastName}`} ({emp.employeeId} - {emp.department})
+                  </option>
+                ))}
             </select>
           </div>
 
@@ -198,7 +203,7 @@ export default function ManualCelebrationModal({
                 onChange={(e) => setEmployeeName(e.target.value)}
                 placeholder="e.g. Alex Chen"
                 required
-                className="mt-1 w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#4318FF]/20"
+                className="mt-1 w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#00AEEF]/20"
               />
             </div>
 
@@ -212,7 +217,7 @@ export default function ManualCelebrationModal({
                 onChange={(e) => setEmployeeEmail(e.target.value)}
                 placeholder="alex@peoplepulse.com"
                 required
-                className="mt-1 w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#4318FF]/20"
+                className="mt-1 w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#00AEEF]/20"
               />
             </div>
           </div>
@@ -225,7 +230,7 @@ export default function ManualCelebrationModal({
               <select
                 value={celebrationType}
                 onChange={(e) => setCelebrationType(e.target.value)}
-                className="mt-1 w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#4318FF]/20"
+                className="mt-1 w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#00AEEF]/20"
               >
                 <option value="Birthday">Birthday</option>
                 <option value="Work Anniversary">Work Anniversary</option>
@@ -243,7 +248,7 @@ export default function ManualCelebrationModal({
                 value={celebrationDate}
                 onChange={(e) => setCelebrationDate(e.target.value)}
                 required
-                className="mt-1 w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#4318FF]/20"
+                className="mt-1 w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#00AEEF]/20"
               />
             </div>
           </div>
@@ -258,7 +263,7 @@ export default function ManualCelebrationModal({
               onChange={(e) => setCustomTitle(e.target.value)}
               placeholder={celebrationType === "Custom" ? "e.g. Happy Promotion, Sarah!" : "e.g. Congratulations on 5 Years, Sarah!"}
               required
-              className="mt-1 w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#4318FF]/20"
+              className="mt-1 w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#00AEEF]/20"
             />
           </div>
 
@@ -271,7 +276,7 @@ export default function ManualCelebrationModal({
               value={message}
               onChange={(e) => setMessage(e.target.value)}
               placeholder="Special recognition or celebratory note..."
-              className="mt-1 w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#4318FF]/20"
+              className="mt-1 w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#00AEEF]/20"
             />
           </div>
 
@@ -297,7 +302,7 @@ export default function ManualCelebrationModal({
                       file:mr-4 file:py-2 file:px-4
                       file:rounded-full file:border-0
                       file:text-xs file:font-semibold
-                      file:bg-indigo-50 file:text-[#4318FF]
+                      file:bg-indigo-50 file:text-[#00AEEF]
                       hover:file:bg-indigo-100 transition"
                   />
                   <p className="mt-1 text-[10px] text-slate-500">
@@ -322,7 +327,7 @@ export default function ManualCelebrationModal({
             <button
               type="submit"
               disabled={isSubmitting}
-              className="flex items-center gap-2 rounded-full bg-[#4318FF] px-5 py-2 text-xs font-semibold text-white shadow-xs hover:bg-[#3713d9] transition disabled:opacity-50"
+              className="flex items-center gap-2 rounded-full bg-[#00AEEF] px-5 py-2 text-xs font-semibold text-white shadow-xs hover:bg-[#0090c5] transition disabled:opacity-50"
             >
               {isSubmitting ? (
                 <>

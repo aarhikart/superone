@@ -216,7 +216,7 @@ export default function BulkImportModal({ isOpen, onClose, onImportSuccess }) {
               <div className="flex gap-4 mb-8 w-full">
                 <a href="/Employee_Import_Template.xlsx" download className="flex-1 flex flex-col items-center justify-center p-6 rounded-2xl border-2 border-dashed border-indigo-200 bg-indigo-50/50 hover:bg-indigo-50 transition cursor-pointer group">
                   <div className="h-12 w-12 rounded-full bg-white shadow-sm flex items-center justify-center mb-3 group-hover:scale-110 transition">
-                    <Download className="h-6 w-6 text-[#4318FF]" />
+                    <Download className="h-6 w-6 text-[#00AEEF]" />
                   </div>
                   <h3 className="text-sm font-bold text-slate-800">Download Template</h3>
                   <p className="text-xs text-slate-500 text-center mt-1">Get the required .xlsx format with data validation</p>
@@ -270,7 +270,7 @@ export default function BulkImportModal({ isOpen, onClose, onImportSuccess }) {
                 <button 
                   onClick={handleImport}
                   disabled={validationResults.valid.length === 0}
-                  className="rounded-xl border border-[#4318FF] bg-[#4318FF] p-4 text-center flex items-center justify-center hover:bg-[#3713d9] disabled:opacity-50 disabled:cursor-not-allowed transition shadow-md shadow-indigo-500/20 text-white group"
+                  className="rounded-xl border border-[#00AEEF] bg-[#00AEEF] p-4 text-center flex items-center justify-center hover:bg-[#0090c5] disabled:opacity-50 disabled:cursor-not-allowed transition shadow-md shadow-indigo-500/20 text-white group"
                 >
                   <div className="flex flex-col items-center">
                     <p className="text-sm font-bold group-hover:scale-105 transition flex items-center gap-2">Import Valid <ArrowRight className="h-4 w-4" /></p>
@@ -341,7 +341,7 @@ export default function BulkImportModal({ isOpen, onClose, onImportSuccess }) {
           {/* STEP 3: IMPORTING */}
           {step === "importing" && (
             <div className="flex flex-col items-center justify-center py-20">
-              <Loader2 className="h-10 w-10 text-[#4318FF] animate-spin mb-4" />
+              <Loader2 className="h-10 w-10 text-[#00AEEF] animate-spin mb-4" />
               <h3 className="text-lg font-bold text-slate-800">Importing Employees...</h3>
               <p className="text-sm text-slate-500">Please wait while we save valid records to the database.</p>
             </div>
@@ -372,7 +372,7 @@ export default function BulkImportModal({ isOpen, onClose, onImportSuccess }) {
                 </div>
               )}
               
-              <button onClick={handleClose} className="rounded-full bg-[#4318FF] px-8 py-3 text-sm font-bold text-white shadow-lg shadow-indigo-500/20 hover:bg-[#3713d9] transition">
+              <button onClick={handleClose} className="rounded-full bg-[#00AEEF] px-8 py-3 text-sm font-bold text-white shadow-lg shadow-indigo-500/20 hover:bg-[#0090c5] transition">
                 Done & Close
               </button>
             </div>

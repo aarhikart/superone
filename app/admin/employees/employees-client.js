@@ -20,7 +20,9 @@ import {
   Heart,
   Upload,
   Camera,
-  FileSpreadsheet
+  FileSpreadsheet,
+  UserX,
+  UserCheck,
 } from "lucide-react";
 import * as XLSX from "xlsx";
 import Swal from "sweetalert2";
@@ -286,7 +288,7 @@ export default function EmployeesClient({ currentUser }) {
         text: isEditing
           ? "The employee details and celebration settings have been updated."
           : "New employee has been registered successfully.",
-        confirmButtonColor: "#4318FF",
+        confirmButtonColor: "#00AEEF",
         background: "#ffffff",
         color: "#0f172a",
         customClass: {
@@ -300,6 +302,67 @@ export default function EmployeesClient({ currentUser }) {
       setFormError(err.message || "An unexpected error occurred.");
     } finally {
       setIsSubmitting(false);
+    }
+  };
+
+  const handleToggleDeactivate = async (emp) => {
+    const isDeactivating = emp.status === "Active";
+    const result = await Swal.fire({
+      title: isDeactivating ? "Deactivate Employee?" : "Activate Employee?",
+      text: isDeactivating
+        ? `Are you sure you want to deactivate ${emp.firstName} ${emp.lastName}? They will be hidden from the active employees list.`
+        : `Are you sure you want to reactivate ${emp.firstName} ${emp.lastName}?`,
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#00AEEF",
+      cancelButtonColor: "#64748b",
+      confirmButtonText: isDeactivating ? "Yes, deactivate" : "Yes, activate",
+      cancelButtonText: "Cancel",
+      background: "#ffffff",
+      color: "#0f172a",
+      customClass: {
+        popup: "rounded-3xl shadow-2xl border border-slate-100",
+        confirmButton: "px-5 py-2.5 rounded-xl font-medium",
+        cancelButton: "px-5 py-2.5 rounded-xl font-medium",
+      },
+    });
+
+    if (result.isConfirmed) {
+      Swal.fire({
+        title: "Processing...",
+        text: "Please wait.",
+        allowOutsideClick: false,
+        didOpen: () => Swal.showLoading(),
+      });
+      try {
+        const formData = new FormData();
+        formData.append("status", isDeactivating ? "Inactive" : "Active");
+        const res = await fetch(`/api/employees/${emp.id || emp._id}`, {
+          method: "PUT",
+          body: formData,
+        });
+
+        if (!res.ok) {
+          const data = await res.json();
+          throw new Error(data.error || "Unable to update employee status. Please try again.");
+        }
+
+        await Swal.fire({
+          icon: "success",
+          title: "Updated!",
+          text: `Employee status changed to ${isDeactivating ? "Inactive" : "Active"}.`,
+          confirmButtonColor: "#00AEEF",
+        });
+
+        fetchEmployees();
+      } catch (err) {
+        Swal.fire({
+          icon: "error",
+          title: "Update Failed",
+          text: err.message || "An unexpected error occurred. Please try again later.",
+          confirmButtonColor: "#00AEEF",
+        });
+      }
     }
   };
 
@@ -323,6 +386,12 @@ export default function EmployeesClient({ currentUser }) {
     });
 
     if (result.isConfirmed) {
+      Swal.fire({
+        title: "Deleting...",
+        text: "Please wait.",
+        allowOutsideClick: false,
+        didOpen: () => Swal.showLoading(),
+      });
       try {
         const res = await fetch(`/api/employees/${emp.id || emp._id}`, {
           method: "DELETE",
@@ -330,14 +399,14 @@ export default function EmployeesClient({ currentUser }) {
 
         if (!res.ok) {
           const data = await res.json();
-          throw new Error(data.error || "Failed to delete employee.");
+          throw new Error(data.error || "Unable to delete employee. Please try again later.");
         }
 
         await Swal.fire({
           icon: "success",
           title: "Deleted!",
           text: "Employee record removed successfully.",
-          confirmButtonColor: "#4318FF",
+          confirmButtonColor: "#00AEEF",
           background: "#ffffff",
           color: "#0f172a",
           customClass: {
@@ -349,9 +418,9 @@ export default function EmployeesClient({ currentUser }) {
       } catch (err) {
         Swal.fire({
           icon: "error",
-          title: "Error",
-          text: err.message || "Could not delete employee.",
-          confirmButtonColor: "#4318FF",
+          title: "Delete Failed",
+          text: err.message || "An unexpected error occurred. Please try again later.",
+          confirmButtonColor: "#00AEEF",
         });
       }
     }
@@ -410,7 +479,7 @@ export default function EmployeesClient({ currentUser }) {
         icon: "success",
         title: "Export Complete!",
         text: "The employee directory has been downloaded as an Excel file.",
-        confirmButtonColor: "#4318FF",
+        confirmButtonColor: "#00AEEF",
         timer: 2000,
         timerProgressBar: true,
       });
@@ -419,8 +488,8 @@ export default function EmployeesClient({ currentUser }) {
       Swal.fire({
         icon: "error",
         title: "Export Failed",
-        text: "Could not export employees data.",
-        confirmButtonColor: "#4318FF",
+        text: "Unable to export the employee directory data at this time. Please try again later.",
+        confirmButtonColor: "#00AEEF",
       });
     }
   };
@@ -471,7 +540,7 @@ export default function EmployeesClient({ currentUser }) {
             <button
               type="button"
               onClick={handleOpenAddDrawer}
-              className="flex items-center justify-center gap-2 rounded-full bg-[#4318FF] px-6 py-2.5 text-sm font-semibold text-white shadow-md shadow-indigo-500/20 transition hover:bg-[#3713d9] active:scale-95"
+              className="flex items-center justify-center gap-2 rounded-full bg-[#00AEEF] px-6 py-2.5 text-sm font-semibold text-white shadow-md shadow-indigo-500/20 transition hover:bg-[#0090c5] active:scale-95"
             >
               <Plus className="h-4 w-4" />
               <span>Add Employee</span>
@@ -493,12 +562,21 @@ export default function EmployeesClient({ currentUser }) {
             </div>
           </div>
           <div className="mt-4">
-            <p className="text-4xl font-extrabold tracking-tight text-slate-900">
-              {stats.totalEmployees || totalCount || 248}
-            </p>
-            <p className="mt-2 text-xs font-semibold text-emerald-600">
-              {stats.growthText || "↑ +12 from last month"}
-            </p>
+            {loading ? (
+              <>
+                <div className="h-10 w-16 bg-slate-200 animate-pulse rounded mb-2"></div>
+                <div className="h-4 w-24 bg-slate-200 animate-pulse rounded"></div>
+              </>
+            ) : (
+              <>
+                <p className="text-4xl font-extrabold tracking-tight text-slate-900">
+                  {stats.totalEmployees ?? 0}
+                </p>
+                <p className="mt-2 text-xs font-semibold text-emerald-600">
+                  {stats.growthText ?? "No change"}
+                </p>
+              </>
+            )}
           </div>
         </div>
 
@@ -513,12 +591,21 @@ export default function EmployeesClient({ currentUser }) {
             </div>
           </div>
           <div className="mt-4">
-            <p className="text-4xl font-extrabold tracking-tight text-slate-900">
-              {stats.newThisMonth || 14}
-            </p>
-            <p className="mt-2 text-xs text-slate-400 font-medium">
-              Recent onboardings
-            </p>
+            {loading ? (
+              <>
+                <div className="h-10 w-16 bg-slate-200 animate-pulse rounded mb-2"></div>
+                <div className="h-4 w-24 bg-slate-200 animate-pulse rounded"></div>
+              </>
+            ) : (
+              <>
+                <p className="text-4xl font-extrabold tracking-tight text-slate-900">
+                  {stats.newThisMonth ?? 0}
+                </p>
+                <p className="mt-2 text-xs text-slate-400 font-medium">
+                  Recent onboardings
+                </p>
+              </>
+            )}
           </div>
         </div>
 
@@ -533,12 +620,21 @@ export default function EmployeesClient({ currentUser }) {
             </div>
           </div>
           <div className="mt-4">
-            <p className="text-4xl font-extrabold tracking-tight text-slate-900">
-              {stats.birthdaysThisMonth || 8}
-            </p>
-            <p className="mt-2 text-xs font-semibold text-pink-600">
-              Upcoming celebrations
-            </p>
+            {loading ? (
+              <>
+                <div className="h-10 w-16 bg-pink-200 animate-pulse rounded mb-2"></div>
+                <div className="h-4 w-24 bg-pink-200 animate-pulse rounded"></div>
+              </>
+            ) : (
+              <>
+                <p className="text-4xl font-extrabold tracking-tight text-slate-900">
+                  {stats.birthdaysThisMonth ?? 0}
+                </p>
+                <p className="mt-2 text-xs font-semibold text-pink-600">
+                  Upcoming celebrations
+                </p>
+              </>
+            )}
           </div>
         </div>
 
@@ -553,12 +649,21 @@ export default function EmployeesClient({ currentUser }) {
             </div>
           </div>
           <div className="mt-4">
-            <p className="text-4xl font-extrabold tracking-tight text-slate-900">
-              {stats.workAnniversaries || 6}
-            </p>
-            <p className="mt-2 text-xs font-semibold text-sky-700">
-              Milestones reached
-            </p>
+            {loading ? (
+              <>
+                <div className="h-10 w-16 bg-sky-200 animate-pulse rounded mb-2"></div>
+                <div className="h-4 w-24 bg-sky-200 animate-pulse rounded"></div>
+              </>
+            ) : (
+              <>
+                <p className="text-4xl font-extrabold tracking-tight text-slate-900">
+                  {stats.workAnniversaries ?? 0}
+                </p>
+                <p className="mt-2 text-xs font-semibold text-sky-700">
+                  Milestones reached
+                </p>
+              </>
+            )}
           </div>
         </div>
       </div>
@@ -576,7 +681,7 @@ export default function EmployeesClient({ currentUser }) {
               setPage(1);
             }}
             placeholder="Search by ID, Name, or Email..."
-            className="w-full rounded-xl bg-slate-50/70 pl-10 pr-4 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#4318FF]/20 border border-transparent focus:border-[#4318FF]/30 transition"
+            className="w-full rounded-xl bg-slate-50/70 pl-10 pr-4 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#00AEEF]/20 border border-transparent focus:border-[#00AEEF]/30 transition"
           />
         </div>
 
@@ -590,7 +695,7 @@ export default function EmployeesClient({ currentUser }) {
                 setCelebrationFilter(e.target.value);
                 setPage(1);
               }}
-              className="appearance-none rounded-xl border border-slate-200 bg-white pl-4 pr-9 py-2.5 text-sm font-medium text-slate-700 hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-[#4318FF]/20 cursor-pointer shadow-xs transition"
+              className="appearance-none rounded-xl border border-slate-200 bg-white pl-4 pr-9 py-2.5 text-sm font-medium text-slate-700 hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-[#00AEEF]/20 cursor-pointer shadow-xs transition"
             >
               <option value="">Celebrations</option>
               <option value="birthdays_this_month">🎂 Birthdays This Month</option>
@@ -608,7 +713,7 @@ export default function EmployeesClient({ currentUser }) {
                 setSelectedDepartment(e.target.value);
                 setPage(1);
               }}
-              className="appearance-none rounded-xl border border-slate-200 bg-white pl-4 pr-9 py-2.5 text-sm font-medium text-slate-700 hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-[#4318FF]/20 cursor-pointer shadow-xs transition"
+              className="appearance-none rounded-xl border border-slate-200 bg-white pl-4 pr-9 py-2.5 text-sm font-medium text-slate-700 hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-[#00AEEF]/20 cursor-pointer shadow-xs transition"
             >
               <option value="">Department</option>
               {DEPARTMENTS.map((dept) => (
@@ -628,10 +733,10 @@ export default function EmployeesClient({ currentUser }) {
                 setSelectedStatus(e.target.value);
                 setPage(1);
               }}
-              className="appearance-none rounded-xl border border-slate-200 bg-white pl-4 pr-9 py-2.5 text-sm font-medium text-slate-700 hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-[#4318FF]/20 cursor-pointer shadow-xs transition"
+              className="appearance-none rounded-xl border border-slate-200 bg-white pl-4 pr-9 py-2.5 text-sm font-medium text-slate-700 hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-[#00AEEF]/20 cursor-pointer shadow-xs transition"
             >
-              <option value="">Status</option>
-              <option value="Active">Active</option>
+              <option value="">Status (Active)</option>
+              <option value="Inactive">Deactivated</option>
               <option value="Full-time">Full-time</option>
               <option value="Part-time">Part-time</option>
               <option value="Contract">Contract</option>
@@ -647,7 +752,7 @@ export default function EmployeesClient({ currentUser }) {
             onClick={handleClearFilters}
             className={`flex items-center gap-1.5 rounded-xl border px-4 py-2.5 text-sm font-medium transition ${
               search || selectedDepartment || selectedStatus || celebrationFilter
-                ? "border-indigo-300 bg-indigo-50 text-[#4318FF] hover:bg-indigo-100"
+                ? "border-indigo-300 bg-indigo-50 text-[#00AEEF] hover:bg-indigo-100"
                 : "border-slate-200 bg-white text-slate-600 hover:bg-slate-50"
             }`}
             title="Reset Filters"
@@ -685,7 +790,7 @@ export default function EmployeesClient({ currentUser }) {
               {loading ? (
                 <tr>
                   <td colSpan={5} className="py-16 text-center">
-                    <Loader2 className="mx-auto h-8 w-8 animate-spin text-[#4318FF]" />
+                    <Loader2 className="mx-auto h-8 w-8 animate-spin text-[#00AEEF]" />
                     <p className="mt-3 text-sm text-slate-500">
                       Loading employees...
                     </p>
@@ -728,7 +833,7 @@ export default function EmployeesClient({ currentUser }) {
                               className="h-10 w-10 rounded-full object-cover ring-2 ring-white shadow-xs"
                             />
                           ) : (
-                            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[#4318FF] text-xs font-bold text-white shadow-xs">
+                            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[#00AEEF] text-xs font-bold text-white shadow-xs">
                               {initials}
                             </div>
                           )}
@@ -787,6 +892,18 @@ export default function EmployeesClient({ currentUser }) {
                         <div className="flex items-center justify-end gap-2">
                           <button
                             type="button"
+                            onClick={() => handleToggleDeactivate(emp)}
+                            title={emp.status === "Active" ? "Deactivate Employee" : "Activate Employee"}
+                            className={`rounded-lg p-1.5 transition ${
+                              emp.status === "Active"
+                                ? "text-amber-500 hover:bg-amber-50 hover:text-amber-700"
+                                : "text-emerald-500 hover:bg-emerald-50 hover:text-emerald-700"
+                            }`}
+                          >
+                            {emp.status === "Active" ? <UserX className="h-4 w-4" /> : <UserCheck className="h-4 w-4" />}
+                          </button>
+                          <button
+                            type="button"
                             onClick={() => handleOpenEditDrawer(emp)}
                             title="Edit Employee"
                             className="rounded-lg p-1.5 text-indigo-600 transition hover:bg-indigo-50 hover:text-indigo-800"
@@ -835,7 +952,7 @@ export default function EmployeesClient({ currentUser }) {
                   onClick={() => setPage(pageNum)}
                   className={`flex h-7 w-7 items-center justify-center rounded-full text-xs font-bold transition ${
                     page === pageNum
-                      ? "bg-[#4318FF] text-white shadow-xs"
+                      ? "bg-[#00AEEF] text-white shadow-xs"
                       : "text-slate-600 hover:bg-slate-100"
                   }`}
                 >
@@ -910,7 +1027,7 @@ export default function EmployeesClient({ currentUser }) {
                         className="h-16 w-16 rounded-full object-cover ring-2 ring-indigo-500 shadow-sm"
                       />
                     ) : (
-                      <div className="flex h-16 w-16 items-center justify-center rounded-full bg-indigo-100 text-[#4318FF]">
+                      <div className="flex h-16 w-16 items-center justify-center rounded-full bg-indigo-100 text-[#00AEEF]">
                         <Camera className="h-7 w-7" />
                       </div>
                     )}
@@ -957,7 +1074,7 @@ export default function EmployeesClient({ currentUser }) {
 
                 {/* Section 1: Basic Information */}
                 <div>
-                  <h3 className="text-xs font-bold tracking-wider text-[#4318FF] uppercase">
+                  <h3 className="text-xs font-bold tracking-wider text-[#00AEEF] uppercase">
                     BASIC INFORMATION
                   </h3>
 
@@ -974,7 +1091,7 @@ export default function EmployeesClient({ currentUser }) {
                         onChange={handleFormChange}
                         placeholder="e.g. Sarah"
                         required
-                        className="mt-1.5 w-full rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 focus:border-[#4318FF] focus:outline-none focus:ring-2 focus:ring-[#4318FF]/20"
+                        className="mt-1.5 w-full rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 focus:border-[#00AEEF] focus:outline-none focus:ring-2 focus:ring-[#00AEEF]/20"
                       />
                     </div>
 
@@ -990,7 +1107,7 @@ export default function EmployeesClient({ currentUser }) {
                         onChange={handleFormChange}
                         placeholder="e.g. Johnson"
                         required
-                        className="mt-1.5 w-full rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 focus:border-[#4318FF] focus:outline-none focus:ring-2 focus:ring-[#4318FF]/20"
+                        className="mt-1.5 w-full rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 focus:border-[#00AEEF] focus:outline-none focus:ring-2 focus:ring-[#00AEEF]/20"
                       />
                     </div>
 
@@ -1006,7 +1123,7 @@ export default function EmployeesClient({ currentUser }) {
                         onChange={handleFormChange}
                         placeholder="EMP-000"
                         required
-                        className="mt-1.5 w-full rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 text-sm uppercase text-slate-900 placeholder:text-slate-400 focus:border-[#4318FF] focus:outline-none focus:ring-2 focus:ring-[#4318FF]/20"
+                        className="mt-1.5 w-full rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 text-sm uppercase text-slate-900 placeholder:text-slate-400 focus:border-[#00AEEF] focus:outline-none focus:ring-2 focus:ring-[#00AEEF]/20"
                       />
                     </div>
 
@@ -1022,7 +1139,7 @@ export default function EmployeesClient({ currentUser }) {
                         onChange={handleFormChange}
                         placeholder="name@peoplepulse.com"
                         required
-                        className="mt-1.5 w-full rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 focus:border-[#4318FF] focus:outline-none focus:ring-2 focus:ring-[#4318FF]/20"
+                        className="mt-1.5 w-full rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 focus:border-[#00AEEF] focus:outline-none focus:ring-2 focus:ring-[#00AEEF]/20"
                       />
                     </div>
 
@@ -1037,7 +1154,7 @@ export default function EmployeesClient({ currentUser }) {
                         value={formData.phoneNumber}
                         onChange={handleFormChange}
                         placeholder="+1 (555) 000-0000"
-                        className="mt-1.5 w-full rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 focus:border-[#4318FF] focus:outline-none focus:ring-2 focus:ring-[#4318FF]/20"
+                        className="mt-1.5 w-full rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 focus:border-[#00AEEF] focus:outline-none focus:ring-2 focus:ring-[#00AEEF]/20"
                       />
                     </div>
 
@@ -1051,7 +1168,7 @@ export default function EmployeesClient({ currentUser }) {
                         name="dateOfBirth"
                         value={formData.dateOfBirth}
                         onChange={handleFormChange}
-                        className="mt-1.5 w-full rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 text-sm text-slate-900 focus:border-[#4318FF] focus:outline-none focus:ring-2 focus:ring-[#4318FF]/20"
+                        className="mt-1.5 w-full rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 text-sm text-slate-900 focus:border-[#00AEEF] focus:outline-none focus:ring-2 focus:ring-[#00AEEF]/20"
                       />
                     </div>
 
@@ -1065,7 +1182,7 @@ export default function EmployeesClient({ currentUser }) {
                         name="personalAnniversaryDate"
                         value={formData.personalAnniversaryDate}
                         onChange={handleFormChange}
-                        className="mt-1.5 w-full rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 text-sm text-slate-900 focus:border-[#4318FF] focus:outline-none focus:ring-2 focus:ring-[#4318FF]/20"
+                        className="mt-1.5 w-full rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 text-sm text-slate-900 focus:border-[#00AEEF] focus:outline-none focus:ring-2 focus:ring-[#00AEEF]/20"
                       />
                     </div>
                   </div>
@@ -1073,7 +1190,7 @@ export default function EmployeesClient({ currentUser }) {
 
                 {/* Section 2: Employment Details */}
                 <div>
-                  <h3 className="text-xs font-bold tracking-wider text-[#4318FF] uppercase">
+                  <h3 className="text-xs font-bold tracking-wider text-[#00AEEF] uppercase">
                     EMPLOYMENT DETAILS
                   </h3>
 
@@ -1089,7 +1206,7 @@ export default function EmployeesClient({ currentUser }) {
                           value={formData.department}
                           onChange={handleFormChange}
                           required
-                          className="w-full appearance-none rounded-xl border border-slate-200 bg-white px-3.5 pr-8 py-2.5 text-sm text-slate-900 focus:border-[#4318FF] focus:outline-none focus:ring-2 focus:ring-[#4318FF]/20"
+                          className="w-full appearance-none rounded-xl border border-slate-200 bg-white px-3.5 pr-8 py-2.5 text-sm text-slate-900 focus:border-[#00AEEF] focus:outline-none focus:ring-2 focus:ring-[#00AEEF]/20"
                         >
                           <option value="">Select Department</option>
                           {DEPARTMENTS.map((dept) => (
@@ -1114,7 +1231,7 @@ export default function EmployeesClient({ currentUser }) {
                         onChange={handleFormChange}
                         placeholder="e.g. Senior Designer"
                         required
-                        className="mt-1.5 w-full rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 focus:border-[#4318FF] focus:outline-none focus:ring-2 focus:ring-[#4318FF]/20"
+                        className="mt-1.5 w-full rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 focus:border-[#00AEEF] focus:outline-none focus:ring-2 focus:ring-[#00AEEF]/20"
                       />
                     </div>
 
@@ -1129,7 +1246,7 @@ export default function EmployeesClient({ currentUser }) {
                         value={formData.dateOfJoining}
                         onChange={handleFormChange}
                         required
-                        className="mt-1.5 w-full rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 text-sm text-slate-900 focus:border-[#4318FF] focus:outline-none focus:ring-2 focus:ring-[#4318FF]/20"
+                        className="mt-1.5 w-full rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 text-sm text-slate-900 focus:border-[#00AEEF] focus:outline-none focus:ring-2 focus:ring-[#00AEEF]/20"
                       />
                     </div>
 
@@ -1144,7 +1261,7 @@ export default function EmployeesClient({ currentUser }) {
                           value={formData.employmentStatus}
                           onChange={handleFormChange}
                           required
-                          className="w-full appearance-none rounded-xl border border-slate-200 bg-white px-3.5 pr-8 py-2.5 text-sm text-slate-900 focus:border-[#4318FF] focus:outline-none focus:ring-2 focus:ring-[#4318FF]/20"
+                          className="w-full appearance-none rounded-xl border border-slate-200 bg-white px-3.5 pr-8 py-2.5 text-sm text-slate-900 focus:border-[#00AEEF] focus:outline-none focus:ring-2 focus:ring-[#00AEEF]/20"
                         >
                           {EMPLOYMENT_STATUSES.map((status) => (
                             <option key={status} value={status}>
@@ -1160,7 +1277,7 @@ export default function EmployeesClient({ currentUser }) {
 
                 {/* Section 3: Automation Preferences (Matching Image 4) */}
                 <div className="border-t border-slate-100 pt-5">
-                  <h3 className="text-xs font-bold tracking-wider text-[#4318FF] uppercase">
+                  <h3 className="text-xs font-bold tracking-wider text-[#00AEEF] uppercase">
                     AUTOMATION PREFERENCES
                   </h3>
 
@@ -1178,7 +1295,7 @@ export default function EmployeesClient({ currentUser }) {
                           onChange={handleFormChange}
                           className="sr-only peer"
                         />
-                        <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#4318FF]"></div>
+                        <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#00AEEF]"></div>
                       </div>
                     </label>
 
@@ -1195,7 +1312,7 @@ export default function EmployeesClient({ currentUser }) {
                           onChange={handleFormChange}
                           className="sr-only peer"
                         />
-                        <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#4318FF]"></div>
+                        <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#00AEEF]"></div>
                       </div>
                     </label>
 
@@ -1212,7 +1329,7 @@ export default function EmployeesClient({ currentUser }) {
                           onChange={handleFormChange}
                           className="sr-only peer"
                         />
-                        <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#4318FF]"></div>
+                        <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#00AEEF]"></div>
                       </div>
                     </label>
                   </div>
@@ -1234,7 +1351,7 @@ export default function EmployeesClient({ currentUser }) {
                   type="submit"
                   form="employee-form"
                   disabled={isSubmitting}
-                  className="flex items-center gap-2 rounded-full bg-[#4318FF] px-7 py-2.5 text-sm font-semibold text-white shadow-md shadow-indigo-500/20 transition hover:bg-[#3713d9] disabled:opacity-50"
+                  className="flex items-center gap-2 rounded-full bg-[#00AEEF] px-7 py-2.5 text-sm font-semibold text-white shadow-md shadow-indigo-500/20 transition hover:bg-[#0090c5] disabled:opacity-50"
                 >
                   {isSubmitting ? (
                     <>

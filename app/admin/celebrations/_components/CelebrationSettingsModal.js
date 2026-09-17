@@ -95,7 +95,7 @@ function CustomTimePicker({ value, onChange }) {
   const p = (parts[3] || "AM").toUpperCase();
 
   return (
-    <div className="flex items-center gap-1.5 w-full bg-slate-50 border border-slate-200 rounded-xl p-1.5 focus-within:border-[#4318FF] transition shadow-2xs">
+    <div className="flex items-center gap-1.5 w-full bg-slate-50 border border-slate-200 rounded-xl p-1.5 focus-within:border-[#00AEEF] transition shadow-2xs">
       <select
         value={h}
         onChange={(e) => onChange(`${e.target.value}:${m} ${p}`)}
@@ -120,14 +120,14 @@ function CustomTimePicker({ value, onChange }) {
         <button
           type="button"
           onClick={() => onChange(`${h}:${m} AM`)}
-          className={`px-2 py-1 text-[11px] font-bold rounded-md transition ${p === "AM" ? "bg-white text-[#4318FF] shadow-sm" : "text-slate-500 hover:text-slate-700"}`}
+          className={`px-2 py-1 text-[11px] font-bold rounded-md transition ${p === "AM" ? "bg-white text-[#00AEEF] shadow-sm" : "text-slate-500 hover:text-slate-700"}`}
         >
           AM
         </button>
         <button
           type="button"
           onClick={() => onChange(`${h}:${m} PM`)}
-          className={`px-2 py-1 text-[11px] font-bold rounded-md transition ${p === "PM" ? "bg-white text-[#4318FF] shadow-sm" : "text-slate-500 hover:text-slate-700"}`}
+          className={`px-2 py-1 text-[11px] font-bold rounded-md transition ${p === "PM" ? "bg-white text-[#00AEEF] shadow-sm" : "text-slate-500 hover:text-slate-700"}`}
         >
           PM
         </button>
@@ -277,7 +277,7 @@ export default function CelebrationSettingsModal({
         icon: "success",
         title: "Dynamic Settings Saved!",
         text: "Schedules, Global CC / BCC addresses, and dynamic Email Templates are active and saved in the database.",
-        confirmButtonColor: "#4318FF",
+        confirmButtonColor: "#00AEEF",
         background: "#ffffff",
         color: "#0f172a",
         customClass: {
@@ -327,7 +327,7 @@ export default function CelebrationSettingsModal({
             onClick={() => setActiveTab("schedule")}
             className={`py-3.5 border-b-2 transition flex items-center gap-2 ${
               activeTab === "schedule"
-                ? "border-[#4318FF] text-[#4318FF]"
+                ? "border-[#00AEEF] text-[#00AEEF]"
                 : "border-transparent text-slate-500 hover:text-slate-900"
             }`}
           >
@@ -340,7 +340,7 @@ export default function CelebrationSettingsModal({
             onClick={() => setActiveTab("groups")}
             className={`py-3.5 border-b-2 transition flex items-center gap-2 ${
               activeTab === "groups"
-                ? "border-[#4318FF] text-[#4318FF]"
+                ? "border-[#00AEEF] text-[#00AEEF]"
                 : "border-transparent text-slate-500 hover:text-slate-900"
             }`}
           >
@@ -353,7 +353,7 @@ export default function CelebrationSettingsModal({
             onClick={() => setActiveTab("templates")}
             className={`py-3.5 border-b-2 transition flex items-center gap-2 ${
               activeTab === "templates"
-                ? "border-[#4318FF] text-[#4318FF]"
+                ? "border-[#00AEEF] text-[#00AEEF]"
                 : "border-transparent text-slate-500 hover:text-slate-900"
             }`}
           >
@@ -416,7 +416,7 @@ export default function CelebrationSettingsModal({
 
                 <div className="mt-6 grid grid-cols-1 sm:grid-cols-3 gap-5">
                   {/* Birthdays Time Selector */}
-                  <div className="rounded-2xl bg-white p-4.5 border border-slate-200 shadow-2xs hover:border-[#4318FF]/40 transition">
+                  <div className="rounded-2xl bg-white p-4.5 border border-slate-200 shadow-2xs hover:border-[#00AEEF]/40 transition">
                     <div className="flex items-center justify-between mb-4">
                       <label className="text-xs font-bold text-slate-800 flex items-center gap-2">
                         <Cake className="h-4 w-4 text-pink-500" />
@@ -430,7 +430,7 @@ export default function CelebrationSettingsModal({
                   </div>
 
                   {/* Work Anniversaries Time Selector */}
-                  <div className="rounded-2xl bg-white p-4.5 border border-slate-200 shadow-2xs hover:border-[#4318FF]/40 transition">
+                  <div className="rounded-2xl bg-white p-4.5 border border-slate-200 shadow-2xs hover:border-[#00AEEF]/40 transition">
                     <div className="flex items-center justify-between mb-4">
                       <label className="text-xs font-bold text-slate-800 flex items-center gap-2">
                         <Award className="h-4 w-4 text-indigo-600" />
@@ -444,7 +444,7 @@ export default function CelebrationSettingsModal({
                   </div>
 
                   {/* Personal Milestones Time Selector */}
-                  <div className="rounded-2xl bg-white p-4.5 border border-slate-200 shadow-2xs hover:border-[#4318FF]/40 transition">
+                  <div className="rounded-2xl bg-white p-4.5 border border-slate-200 shadow-2xs hover:border-[#00AEEF]/40 transition">
                     <div className="flex items-center justify-between mb-4">
                       <label className="text-xs font-bold text-slate-800 flex items-center gap-2">
                         <Heart className="h-4 w-4 text-rose-500" />
@@ -471,7 +471,7 @@ export default function CelebrationSettingsModal({
             <div className="space-y-6">
               <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-2xs space-y-4">
                 <div className="flex items-center gap-2 border-b border-slate-100 pb-3">
-                  <Globe className="h-4 w-4 text-[#4318FF]" />
+                  <Globe className="h-4 w-4 text-[#00AEEF]" />
                   <h3 className="text-xs font-bold uppercase tracking-wider text-slate-900">
                     Global Direct CC & BCC Addresses (Applied to All Celebrations)
                   </h3>
@@ -490,7 +490,7 @@ export default function CelebrationSettingsModal({
                       value={globalCcText}
                       onChange={(e) => setGlobalCcText(e.target.value)}
                       placeholder="e.g. hr@peoplepulse.com, teamleads@peoplepulse.com"
-                      className="w-full rounded-xl border border-slate-200 bg-white px-3.5 py-2 text-xs font-mono text-slate-800 focus:outline-none focus:border-[#4318FF]"
+                      className="w-full rounded-xl border border-slate-200 bg-white px-3.5 py-2 text-xs font-mono text-slate-800 focus:outline-none focus:border-[#00AEEF]"
                     />
                     <p className="text-[11px] text-slate-400 mt-1">
                       These email IDs will receive carbon copy (CC) of all celebration milestone greetings.
@@ -506,7 +506,7 @@ export default function CelebrationSettingsModal({
                       value={globalBccText}
                       onChange={(e) => setGlobalBccText(e.target.value)}
                       placeholder="e.g. admin@peoplepulse.com, records@peoplepulse.com"
-                      className="w-full rounded-xl border border-slate-200 bg-white px-3.5 py-2 text-xs font-mono text-slate-800 focus:outline-none focus:border-[#4318FF]"
+                      className="w-full rounded-xl border border-slate-200 bg-white px-3.5 py-2 text-xs font-mono text-slate-800 focus:outline-none focus:border-[#00AEEF]"
                     />
                     <p className="text-[11px] text-slate-400 mt-1">
                       These email IDs will receive blind carbon copy (BCC) of all celebration milestone greetings.
@@ -614,7 +614,7 @@ export default function CelebrationSettingsModal({
                         value={currentSubject}
                         onChange={(e) => updateConfigField(configKey, "subject", e.target.value)}
                         placeholder="e.g. Happy Celebration, {firstName}!"
-                        className="mt-1 w-full rounded-xl border border-slate-200 bg-white px-3.5 py-2 text-xs font-medium text-slate-900 focus:outline-none focus:border-[#4318FF]"
+                        className="mt-1 w-full rounded-xl border border-slate-200 bg-white px-3.5 py-2 text-xs font-medium text-slate-900 focus:outline-none focus:border-[#00AEEF]"
                       />
                     </div>
 
@@ -627,7 +627,7 @@ export default function CelebrationSettingsModal({
                         value={currentHeading}
                         onChange={(e) => updateConfigField(configKey, "heading", e.target.value)}
                         placeholder="e.g. Wishing You a Fantastic Celebration, {firstName}!"
-                        className="mt-1 w-full rounded-xl border border-slate-200 bg-white px-3.5 py-2 text-xs font-medium text-slate-900 focus:outline-none focus:border-[#4318FF]"
+                        className="mt-1 w-full rounded-xl border border-slate-200 bg-white px-3.5 py-2 text-xs font-medium text-slate-900 focus:outline-none focus:border-[#00AEEF]"
                       />
                     </div>
 
@@ -640,7 +640,7 @@ export default function CelebrationSettingsModal({
                         value={currentBody}
                         onChange={(e) => updateConfigField(configKey, "bodyMessage", e.target.value)}
                         placeholder="Warm celebratory message text..."
-                        className="mt-1 w-full rounded-xl border border-slate-200 bg-white px-3.5 py-2 text-xs text-slate-900 focus:outline-none focus:border-[#4318FF]"
+                        className="mt-1 w-full rounded-xl border border-slate-200 bg-white px-3.5 py-2 text-xs text-slate-900 focus:outline-none focus:border-[#00AEEF]"
                       />
                     </div>
 
@@ -655,7 +655,7 @@ export default function CelebrationSettingsModal({
                           value={ccVal}
                           onChange={(e) => setCcVal(e.target.value)}
                           placeholder="Optional direct CC for this milestone only"
-                          className="mt-1 w-full rounded-xl border border-slate-200 bg-white px-3 py-1.5 text-xs text-slate-800 focus:outline-none focus:border-[#4318FF]"
+                          className="mt-1 w-full rounded-xl border border-slate-200 bg-white px-3 py-1.5 text-xs text-slate-800 focus:outline-none focus:border-[#00AEEF]"
                         />
                       </div>
 
@@ -668,7 +668,7 @@ export default function CelebrationSettingsModal({
                           value={bccVal}
                           onChange={(e) => setBccVal(e.target.value)}
                           placeholder="Optional direct BCC for this milestone only"
-                          className="mt-1 w-full rounded-xl border border-slate-200 bg-white px-3 py-1.5 text-xs text-slate-800 focus:outline-none focus:border-[#4318FF]"
+                          className="mt-1 w-full rounded-xl border border-slate-200 bg-white px-3 py-1.5 text-xs text-slate-800 focus:outline-none focus:border-[#00AEEF]"
                         />
                       </div>
                     </div>
@@ -694,7 +694,7 @@ export default function CelebrationSettingsModal({
             type="button"
             onClick={handleSaveAll}
             disabled={isSaving}
-            className="flex items-center gap-2 rounded-full bg-[#4318FF] px-6 py-2 text-xs font-semibold text-white shadow-sm hover:bg-[#3713d9] transition disabled:opacity-50"
+            className="flex items-center gap-2 rounded-full bg-[#00AEEF] px-6 py-2 text-xs font-semibold text-white shadow-sm hover:bg-[#0090c5] transition disabled:opacity-50"
           >
             {isSaving ? (
               <>
