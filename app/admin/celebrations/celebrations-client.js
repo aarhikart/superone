@@ -297,6 +297,22 @@ export default function CelebrationsClient({ currentUser }) {
           throw new Error(resData.error || "Failed to send celebration email.");
         }
 
+        if (resData.alreadySent || resData.details?.alreadySent) {
+          await Swal.fire({
+            icon: "info",
+            title: "Already Sent",
+            text: resData.message || `A celebration greeting has already been sent to ${item.employeeName} for this milestone today.`,
+            confirmButtonColor: "#00AEEF",
+            background: "#ffffff",
+            color: "#0f172a",
+            customClass: {
+              popup: "rounded-3xl shadow-2xl border border-slate-100",
+            },
+          });
+          fetchCelebrations();
+          return;
+        }
+
         await Swal.fire({
           icon: "success",
           title: "Celebration Email Sent!",

@@ -91,11 +91,18 @@ export async function POST(req) {
       });
 
       if (!res.success) {
+        if (res.alreadySent) {
+          return Response.json({
+            alreadySent: true,
+            message: res.message || `Celebration email has already been sent to this employee today.`,
+          });
+        }
         return Response.json({ error: res.error }, { status: 400 });
       }
 
       return Response.json({
         message: "Celebration email sent successfully.",
+        alreadySent: Boolean(res.alreadySent),
         details: res,
       });
     }

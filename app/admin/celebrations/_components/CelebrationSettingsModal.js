@@ -601,7 +601,7 @@ export default function CelebrationSettingsModal({
                         {title}
                       </span>
                       <span className="text-[11px] text-slate-400 font-medium">
-                        Variables: <code className="bg-slate-100 px-1 py-0.5 rounded text-indigo-600 font-mono">{"{firstName}"}</code>, <code className="bg-slate-100 px-1 py-0.5 rounded text-indigo-600 font-mono">{"{years}"}</code>
+                        Variables: <code className="bg-slate-100 px-1 py-0.5 rounded text-indigo-600 font-mono">{"{firstName}"}</code>, <code className="bg-slate-100 px-1 py-0.5 rounded text-indigo-600 font-mono">{"{lastName}"}</code>, <code className="bg-slate-100 px-1 py-0.5 rounded text-indigo-600 font-mono">{"{fullName}"}</code>, <code className="bg-slate-100 px-1 py-0.5 rounded text-indigo-600 font-mono">{"{years}"}</code>
                       </span>
                     </div>
 

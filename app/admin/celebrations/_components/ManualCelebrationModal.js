@@ -75,12 +75,33 @@ export default function ManualCelebrationModal({
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!employeeName.trim() || !employeeEmail.trim() || !customTitle.trim() || !celebrationDate) {
-      setError("Please fill in all required fields.");
+      const msg = "Please fill in all required fields (Employee Name, Email, Celebration Title, and Date).";
+      setError(msg);
+      Swal.fire({
+        icon: "warning",
+        title: "Required Fields Missing",
+        text: msg,
+        confirmButtonColor: "#00AEEF",
+        background: "#ffffff",
+        color: "#0f172a",
+        customClass: {
+          popup: "rounded-3xl shadow-2xl border border-slate-100",
+        },
+      });
       return;
     }
 
     setIsSubmitting(true);
     setError("");
+
+    Swal.fire({
+      title: "Scheduling Celebration...",
+      text: "Please wait while the custom milestone is being recorded.",
+      allowOutsideClick: false,
+      didOpen: () => {
+        Swal.showLoading();
+      },
+    });
 
     try {
       const formData = new FormData();

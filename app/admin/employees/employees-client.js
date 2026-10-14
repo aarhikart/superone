@@ -38,6 +38,8 @@ const DEPARTMENTS = [
   "Operations",
   "Customer Support",
   "Product",
+    "UI/UX 1",
+  
 ];
 
 const EMPLOYMENT_STATUSES = ["Full-time", "Part-time", "Contract", "Intern"];
@@ -222,20 +224,42 @@ export default function EmployeesClient({ currentUser }) {
     e.preventDefault();
     setFormError("");
 
-    if (
-      !formData.firstName.trim() ||
-      !formData.lastName.trim() ||
-      !formData.employeeId.trim() ||
-      !formData.email.trim() ||
-      !formData.department.trim() ||
-      !formData.jobTitle.trim() ||
-      !formData.dateOfJoining
-    ) {
-      setFormError("Please fill in all required fields marked with *.");
+    const missingFields = [];
+    if (!formData.firstName.trim()) missingFields.push("First Name");
+    if (!formData.lastName.trim()) missingFields.push("Last Name");
+    if (!formData.employeeId.trim()) missingFields.push("Employee ID");
+    if (!formData.email.trim()) missingFields.push("Email Address");
+    if (!formData.department.trim()) missingFields.push("Department");
+    if (!formData.jobTitle.trim()) missingFields.push("Job Title");
+    if (!formData.dateOfJoining) missingFields.push("Date of Joining");
+
+    if (missingFields.length > 0) {
+      const msg = `Please fill in all required fields: ${missingFields.join(", ")}.`;
+      setFormError(msg);
+      Swal.fire({
+        icon: "warning",
+        title: "Required Fields Missing",
+        text: msg,
+        confirmButtonColor: "#00AEEF",
+        background: "#ffffff",
+        color: "#0f172a",
+        customClass: {
+          popup: "rounded-3xl shadow-2xl border border-slate-100",
+        },
+      });
       return;
     }
 
     setIsSubmitting(true);
+
+    Swal.fire({
+      title: isEditing ? "Updating Employee..." : "Adding Employee...",
+      text: "Please wait while employee details are being saved.",
+      allowOutsideClick: false,
+      didOpen: () => {
+        Swal.showLoading();
+      },
+    });
 
     try {
       const url = isEditing ? `/api/employees/${editId}` : `/api/employees`;
@@ -300,6 +324,12 @@ export default function EmployeesClient({ currentUser }) {
       fetchEmployees();
     } catch (err) {
       setFormError(err.message || "An unexpected error occurred.");
+      Swal.fire({
+        icon: "error",
+        title: isEditing ? "Update Failed" : "Save Failed",
+        text: err.message || "An unexpected error occurred. Please try again.",
+        confirmButtonColor: "#00AEEF",
+      });
     } finally {
       setIsSubmitting(false);
     }

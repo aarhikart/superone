@@ -5,6 +5,86 @@ import { X, UploadCloud, Download, CheckCircle, AlertCircle, FileSpreadsheet, Lo
 import * as XLSX from "xlsx";
 import Swal from "sweetalert2";
 
+const VALID_DEPARTMENTS = [
+  "Engineering",
+  "Marketing",
+  "Design",
+  "Sales",
+  "HR",
+  "Finance",
+  "Operations",
+  "Customer Support",
+  "Product",
+      "UI/UX",
+];
+
+function normalizeExcelDate(val) {
+  if (val === null || val === undefined || val === "") return "";
+
+  // 1. If it's a number (Excel serial date code)
+  if (typeof val === "number") {
+    if (XLSX?.SSF?.parse_date_code) {
+      const parsed = XLSX.SSF.parse_date_code(val);
+      if (parsed && parsed.y && parsed.m && parsed.d) {
+        const y = parsed.y;
+        const m = String(parsed.m).padStart(2, "0");
+        const d = String(parsed.d).padStart(2, "0");
+        return `${y}-${m}-${d}`;
+      }
+    }
+  }
+
+  // 2. If it's already a JS Date
+  if (val instanceof Date && !isNaN(val.getTime())) {
+    // Offset by +12 hours to safely eliminate timezone boundary drift (such as 18:30 UTC = midnight IST)
+    const offsetDate = new Date(val.getTime() + 12 * 60 * 60 * 1000);
+    const y = offsetDate.getUTCFullYear();
+    const m = String(offsetDate.getUTCMonth() + 1).padStart(2, "0");
+    const d = String(offsetDate.getUTCDate()).padStart(2, "0");
+    return `${y}-${m}-${d}`;
+  }
+
+  // 3. If it's a string
+  if (typeof val === "string") {
+    const s = val.trim();
+    if (!s) return "";
+
+    // Format: YYYY-MM-DD or YYYY/MM/DD
+    const isoMatch = s.match(/^(\d{4})[-/](\d{1,2})[-/](\d{1,2})/);
+    if (isoMatch) {
+      const y = isoMatch[1];
+      const m = String(isoMatch[2]).padStart(2, "0");
+      const d = String(isoMatch[3]).padStart(2, "0");
+      return `${y}-${m}-${d}`;
+    }
+
+    // Format: MM-DD-YYYY or DD-MM-YYYY
+    const slashMatch = s.match(/^(\d{1,2})[-/](\d{1,2})[-/](\d{4})/);
+    if (slashMatch) {
+      const p1 = parseInt(slashMatch[1], 10);
+      const p2 = parseInt(slashMatch[2], 10);
+      const y = slashMatch[3];
+      let m, d;
+      if (p1 > 12) {
+        // Must be DD-MM-YYYY
+        d = String(p1).padStart(2, "0");
+        m = String(p2).padStart(2, "0");
+      } else if (p2 > 12) {
+        // Must be MM-DD-YYYY
+        m = String(p1).padStart(2, "0");
+        d = String(p2).padStart(2, "0");
+      } else {
+        // Default MM-DD-YYYY
+        m = String(p1).padStart(2, "0");
+        d = String(p2).padStart(2, "0");
+      }
+      return `${y}-${m}-${d}`;
+    }
+  }
+
+  return "";
+}
+
 export default function BulkImportModal({ isOpen, onClose, onImportSuccess }) {
   const [step, setStep] = useState("select"); // 'select', 'preview', 'importing', 'result'
   const [file, setFile] = useState(null);
@@ -85,30 +165,58 @@ export default function BulkImportModal({ isOpen, onClose, onImportSuccess }) {
     data.forEach((row, index) => {
       const rowNum = index + 2; // +1 for 0-index, +1 for header
       
-      const emailVal = row["Email Address*"]?.toString().trim() || "";
-      const idVal = row["Employee ID*"]?.toString().trim() || "";
+      const emailVal = (row["Email Address*"] || row["Email Address"] || row["Email"] || "").toString().trim();
+      const idVal = (row["Employee ID*"] || row["Employee ID"] || "").toString().trim();
       
       // Silently skip the built-in dummy records so they aren't parsed as valid or invalid
-      if ((emailVal === "john.doe@example.com" && idVal === "EMP-001") || 
-          (emailVal === "jane.smith@example.com" && idVal === "EMP-002")) {
+      if (
+        (emailVal === "john.doe@example.com" && idVal === "EMP-001") ||
+        (emailVal === "priya.sharma@example.com" && idVal === "EMP-002") ||
+        (emailVal === "jane.smith@example.com" && idVal === "EMP-002")
+      ) {
         return;
       }
       
       processedCount++;
 
+      const rawJoining =
+        row["Date of Joining* (YYYY-MM-DD)"] ||
+        row["Date of Joining (YYYY-MM-DD)"] ||
+        row["Date of Joining*"] ||
+        row["Date of Joining"] ||
+        "";
+
+      const rawDob =
+        row["Date of Birth* (YYYY-MM-DD)"] ||
+        row["Date of Birth (YYYY-MM-DD)"] ||
+        row["Date of Birth*"] ||
+        row["Date of Birth"] ||
+        "";
+
+      const rawPersonal =
+        row["Personal Anniversary (YYYY-MM-DD)"] ||
+        row["Personal Anniversary"] ||
+        "";
+
+      const normalizedJoining = normalizeExcelDate(rawJoining);
+      const normalizedDob = normalizeExcelDate(rawDob);
+      const normalizedPersonal = normalizeExcelDate(rawPersonal);
+
       const record = {
-        firstName: row["First Name*"]?.toString().trim() || "",
-        lastName: row["Last Name*"]?.toString().trim() || "",
+        firstName: (row["First Name*"] || row["First Name"] || "").toString().trim(),
+        lastName: (row["Last Name*"] || row["Last Name"] || "").toString().trim(),
         employeeId: idVal,
         email: emailVal,
-        phoneNumber: row["Phone Number"]?.toString().trim() || "",
-        department: row["Department"]?.toString().trim() || "",
-        jobTitle: row["Job Title"]?.toString().trim() || "",
-        employmentStatus: row["Employment Status*"]?.toString().trim() || "",
-        dateOfJoining: row["Date of Joining* (YYYY-MM-DD)"] || "",
-        dateOfBirth: row["Date of Birth (YYYY-MM-DD)"] || "",
-        personalAnniversaryDate: row["Personal Anniversary (YYYY-MM-DD)"] || "",
-        rowNum
+        phoneNumber: (row["Phone Number*"] || row["Phone Number"] || "").toString().trim(),
+        department: (row["Department*"] || row["Department"] || "").toString().trim(),
+        jobTitle: (row["Job Title*"] || row["Job Title"] || "").toString().trim(),
+        employmentStatus: (row["Employment Status*"] || row["Employment Status"] || "").toString().trim(),
+        dateOfJoining: normalizedJoining,
+        dateOfBirth: normalizedDob,
+        personalAnniversaryDate: normalizedPersonal,
+        rawJoining: String(rawJoining),
+        rawDob: String(rawDob),
+        rowNum,
       };
 
       const errors = [];
@@ -123,6 +231,23 @@ export default function BulkImportModal({ isOpen, onClose, onImportSuccess }) {
         errors.push({ field: "Email Address*", reason: "Invalid format" });
       }
 
+      if (!record.phoneNumber) {
+        errors.push({ field: "Phone Number*", reason: "Required" });
+      }
+
+      if (!record.department) {
+        errors.push({ field: "Department*", reason: "Required" });
+      } else if (!VALID_DEPARTMENTS.includes(record.department)) {
+        errors.push({
+          field: "Department*",
+          reason: `Must be one of: ${VALID_DEPARTMENTS.join(", ")}`,
+        });
+      }
+
+      if (!record.jobTitle) {
+        errors.push({ field: "Job Title*", reason: "Required" });
+      }
+
       if (!record.employmentStatus) {
         errors.push({ field: "Employment Status*", reason: "Required" });
       } else if (!["Full-time", "Part-time", "Contract", "Intern"].includes(record.employmentStatus)) {
@@ -130,7 +255,11 @@ export default function BulkImportModal({ isOpen, onClose, onImportSuccess }) {
       }
 
       if (!record.dateOfJoining) {
-        errors.push({ field: "Date of Joining*", reason: "Required" });
+        errors.push({ field: "Date of Joining*", reason: "Required (Valid YYYY-MM-DD)" });
+      }
+
+      if (!record.dateOfBirth) {
+        errors.push({ field: "Date of Birth*", reason: "Required (Valid YYYY-MM-DD)" });
       }
 
       if (errors.length > 0) {
@@ -214,12 +343,12 @@ export default function BulkImportModal({ isOpen, onClose, onImportSuccess }) {
           {step === "select" && (
             <div className="max-w-2xl mx-auto flex flex-col items-center">
               <div className="flex gap-4 mb-8 w-full">
-                <a href="/Employee_Import_Template.xlsx" download className="flex-1 flex flex-col items-center justify-center p-6 rounded-2xl border-2 border-dashed border-indigo-200 bg-indigo-50/50 hover:bg-indigo-50 transition cursor-pointer group">
+                <a href="/api/employees/template" download="Employee_Import_Template.xlsx" className="flex-1 flex flex-col items-center justify-center p-6 rounded-2xl border-2 border-dashed border-indigo-200 bg-indigo-50/50 hover:bg-indigo-50 transition cursor-pointer group">
                   <div className="h-12 w-12 rounded-full bg-white shadow-sm flex items-center justify-center mb-3 group-hover:scale-110 transition">
                     <Download className="h-6 w-6 text-[#00AEEF]" />
                   </div>
                   <h3 className="text-sm font-bold text-slate-800">Download Template</h3>
-                  <p className="text-xs text-slate-500 text-center mt-1">Get the required .xlsx format with data validation</p>
+                  <p className="text-xs text-slate-500 text-center mt-1">Includes 2 dummy employee records & dropdown validation</p>
                 </a>
                 
                 <label className="flex-1 flex flex-col items-center justify-center p-6 rounded-2xl border-2 border-dashed border-emerald-200 bg-emerald-50/50 hover:bg-emerald-50 transition cursor-pointer group">
@@ -242,10 +371,11 @@ export default function BulkImportModal({ isOpen, onClose, onImportSuccess }) {
               <div className="w-full rounded-xl bg-slate-50 border border-slate-200 p-4">
                 <h4 className="text-xs font-bold text-slate-800 mb-2 flex items-center gap-1.5"><AlertCircle className="h-4 w-4 text-indigo-500" /> Important Guidelines</h4>
                 <ul className="text-xs text-slate-600 list-disc pl-5 space-y-1">
-                  <li>Do not change the header names in row 1.</li>
+                  <li><strong>2 Dummy Records:</strong> Rows 2 and 3 contain example data (John Doe & Priya Sharma). You can replace them with your actual employees or edit them.</li>
+                  <li>Do not change the header column names in row 1.</li>
                   <li>Fields marked with an asterisk (*) are required.</li>
-                  <li>Dates must be selected using the cell dropdowns or entered in YYYY-MM-DD format.</li>
-                  <li>Employment Status must be one of the predefined options.</li>
+                  <li>Select <strong>Department</strong> and <strong>Employment Status</strong> from the Excel dropdown list.</li>
+                  <li>Dates must be entered in <code>YYYY-MM-DD</code> format (e.g. 2026-12-23).</li>
                 </ul>
               </div>
             </div>

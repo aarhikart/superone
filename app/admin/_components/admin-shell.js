@@ -5,6 +5,24 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { getNavItemsForRole } from "@/lib/admin-access";
 
+import {
+  LayoutDashboard,
+  Users,
+  PartyPopper,
+  BookOpen,
+  Newspaper,
+  Briefcase,
+  Megaphone,
+  FileText,
+  FolderGit2,
+  HelpCircle,
+  MessageSquare,
+  ShieldCheck,
+  LogOut,
+  X,
+  ChevronRight,
+} from "lucide-react";
+
 const formatDate = (dateStr) => {
   if (!dateStr) return "";
   const d = new Date(dateStr);
@@ -12,13 +30,35 @@ const formatDate = (dateStr) => {
   return `${d.toLocaleDateString()} ${d.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' })}`;
 };
 
-function getInitials(label) {
-  return label
-    .split(" ")
-    .map((part) => part[0])
-    .join("")
-    .slice(0, 2)
-    .toUpperCase();
+function getNavIcon(href) {
+  switch (href) {
+    case "/admin":
+      return LayoutDashboard;
+    case "/admin/employees":
+      return Users;
+    case "/admin/celebrations":
+      return PartyPopper;
+    case "/admin/blogs":
+      return BookOpen;
+    case "/admin/articles":
+      return Newspaper;
+    case "/admin/jobs":
+      return Briefcase;
+    case "/admin/press-releases":
+      return Megaphone;
+    case "/admin/job-applications":
+      return FileText;
+    case "/admin/employee-extensions":
+      return FolderGit2;
+    case "/admin/poc-requests":
+      return HelpCircle;
+    case "/admin/contact-messages":
+      return MessageSquare;
+    case "/admin/login-management":
+      return ShieldCheck;
+    default:
+      return LayoutDashboard;
+  }
 }
 
 export default function AdminShell({ currentUser, children }) {
@@ -122,60 +162,109 @@ export default function AdminShell({ currentUser, children }) {
     <div className="min-h-screen bg-[radial-gradient(circle_at_top_left,_rgba(14,165,233,0.22),_transparent_28%),linear-gradient(180deg,#f8fafc_0%,#eef4ff_100%)] text-slate-900">
       <div className="mx-auto flex min-h-screen max-w-[1600px]">
         <aside
-          className={`fixed inset-y-0 left-0 z-40 w-72 border-r border-white/60 bg-slate-950/92 p-5 text-slate-100 shadow-2xl backdrop-blur transition-transform duration-300 lg:static lg:translate-x-0 ${
+          className={`fixed inset-y-0 left-0 z-40 w-72 border-r border-slate-800/80 bg-gradient-to-b from-slate-950 via-slate-900 to-slate-950 p-5 text-slate-100 shadow-2xl backdrop-blur transition-transform duration-300 lg:static lg:translate-x-0 flex flex-col justify-between ${
             isSidebarOpen ? "translate-x-0" : "-translate-x-full"
           }`}
         >
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-xs font-semibold uppercase tracking-[0.4em] text-cyan-300/80">
-                Admin Flow
-              </p>
-              <h1 className="mt-3 text-2xl font-semibold">Control Room</h1>
+          <div className="flex flex-col min-h-0 flex-1">
+            {/* Top Logo & Branding */}
+            <div className="flex items-center justify-between pb-5 border-b border-white/10">
+              <Link href="/admin" className="flex items-center gap-3 group">
+                <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-white/10 border border-white/15 p-1.5 shadow-inner transition group-hover:bg-white/15">
+                  <img
+                    src="/uploads/logo.png"
+                    alt="Logo"
+                    className="h-full w-full object-contain"
+                  />
+                </div>
+                <div className="min-w-0">
+                  <p className="text-sm font-bold tracking-tight text-white group-hover:text-cyan-300 transition truncate">
+                    PeoplePulse
+                  </p>
+                  <span className="inline-flex items-center gap-1.5 text-[10px] font-semibold tracking-wider uppercase text-cyan-400">
+                    <span className="h-1.5 w-1.5 rounded-full bg-cyan-400 animate-pulse" />
+                    Control Room
+                  </span>
+                </div>
+              </Link>
+              <button
+                type="button"
+                onClick={() => setIsSidebarOpen(false)}
+                className="rounded-full border border-white/10 p-2 text-slate-400 hover:bg-white/10 hover:text-white lg:hidden transition"
+                aria-label="Close menu"
+              >
+                <X className="h-4 w-4" />
+              </button>
             </div>
-            <button
-              type="button"
-              onClick={() => setIsSidebarOpen(false)}
-              className="rounded-full border border-white/10 px-3 py-2 text-xs text-slate-300 lg:hidden"
-            >
-              Close
-            </button>
-          </div>
 
-          <div className="mt-8 rounded-3xl border border-white/10 bg-white/5 p-4">
-            <p className="text-xs uppercase tracking-[0.3em] text-slate-400">Signed In</p>
-            <p className="mt-3 text-lg font-semibold capitalize">{currentUser?.username}</p>
-            <p className="mt-1 text-sm text-cyan-300">{currentUser?.role}</p>
-          </div>
+            {/* Signed-in User Card */}
+            <div className="mt-4 rounded-2xl border border-white/10 bg-gradient-to-br from-white/10 to-white/5 p-3 backdrop-blur-sm shadow-xs">
+              <div className="flex items-center gap-3">
+                <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-[#00AEEF] to-[#4318FF] text-white font-bold text-xs shadow-md">
+                  {currentUser?.username ? currentUser.username[0].toUpperCase() : "A"}
+                </div>
+                <div className="min-w-0 flex-1">
+                  <p className="truncate text-xs font-bold text-white capitalize">
+                    {currentUser?.username || "Admin"}
+                  </p>
+                  <span className="inline-block mt-0.5 rounded-md bg-cyan-400/15 border border-cyan-400/30 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-cyan-300">
+                    {currentUser?.role || "Staff"}
+                  </span>
+                </div>
+              </div>
+            </div>
 
-          <nav className="mt-8 grid gap-2">
-            {navItems.map((item) => {
-              const isActive =
-                pathname === item.href || (item.href !== "/admin" && pathname.startsWith(item.href));
+            {/* Navigation Items with Real Icons */}
+            <nav className="mt-5 flex-1 space-y-1 overflow-y-auto pr-1">
+              {navItems.map((item) => {
+                const isActive =
+                  pathname === item.href || (item.href !== "/admin" && pathname.startsWith(item.href));
+                const IconComponent = getNavIcon(item.href);
 
-              return (
-                <Link
-                  key={item.href}
-                  href={item.href}
-                  onClick={() => setIsSidebarOpen(false)}
-                  className={`flex items-center gap-3 rounded-2xl px-4 py-3 text-sm font-medium transition ${
-                    isActive
-                      ? "bg-cyan-400 text-slate-950 shadow-lg shadow-cyan-500/25"
-                      : "text-slate-300 hover:bg-white/8 hover:text-white"
-                  }`}
-                >
-                  <span
-                    className={`flex h-10 w-10 items-center justify-center rounded-xl text-xs font-semibold ${
-                      isActive ? "bg-slate-950/10" : "bg-white/8 text-cyan-200"
+                return (
+                  <Link
+                    key={item.href}
+                    href={item.href}
+                    onClick={() => setIsSidebarOpen(false)}
+                    className={`group flex items-center justify-between rounded-xl px-3 py-2 text-xs font-semibold transition-all duration-200 ${
+                      isActive
+                        ? "bg-[#00AEEF] text-white shadow-lg shadow-sky-500/25 translate-x-0.5"
+                        : "text-slate-300 hover:bg-white/8 hover:text-white"
                     }`}
                   >
-                    {getInitials(item.label)}
-                  </span>
-                  <span>{item.label}</span>
-                </Link>
-              );
-            })}
-          </nav>
+                    <div className="flex items-center gap-3 min-w-0">
+                      <span
+                        className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg transition ${
+                          isActive
+                            ? "bg-white/20 text-white"
+                            : "bg-white/5 text-slate-400 group-hover:bg-white/10 group-hover:text-cyan-300"
+                        }`}
+                      >
+                        <IconComponent className="h-4 w-4" />
+                      </span>
+                      <span className="truncate">{item.label}</span>
+                    </div>
+                    {isActive && (
+                      <ChevronRight className="h-3.5 w-3.5 shrink-0 text-white/80" />
+                    )}
+                  </Link>
+                );
+              })}
+            </nav>
+          </div>
+
+          {/* Sidebar Footer Logout */}
+          <div className="pt-4 border-t border-white/10 mt-3">
+            <button
+              type="button"
+              onClick={handleLogout}
+              disabled={isLoggingOut}
+              className="w-full flex items-center justify-center gap-2 rounded-xl border border-white/10 bg-white/5 px-4 py-2.5 text-xs font-semibold text-slate-300 hover:bg-rose-500/15 hover:border-rose-500/30 hover:text-rose-300 transition"
+            >
+              <LogOut className="h-3.5 w-3.5" />
+              <span>{isLoggingOut ? "Signing out..." : "Sign Out"}</span>
+            </button>
+          </div>
         </aside>
 
         <div className="flex min-h-screen flex-1 flex-col">
